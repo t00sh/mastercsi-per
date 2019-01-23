@@ -50,3 +50,17 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Temporary generated files
+*~
+*.bak
+
+# LaTeX files
+*.aux
+*.snm
+*.toc
+*.nav
+*.log
+*.out
+report/*.pdf
+slides/*.pdf

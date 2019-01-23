@@ -1,0 +1,108 @@
+\documentclass[a4paper]{memoir}
+
+%% Packages
+\usepackage{lmodern}
+\usepackage{palatino}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{amstext,amsmath,amssymb,amsfonts}
+\usepackage{multirow,colortbl}
+\usepackage{xspace,varioref}
+\usepackage{hyperref}
+\usepackage{graphicx}
+
+
+%% Custom commands
+\newcommand{\version}[1]{\def\theversion{#1}}
+\newcommand{\subtitle}[1]{\def\thesubtitle{#1}}
+
+\newcommand{\authors}[1]{\def\theauthors{#1}\author{#1}}
+\newcommand{\supervisor}[1]{\def\thesupervisor{#1}}
+\newcommand{\tutor}[1]{\def\thetutor{#1}}
+
+% Translation for custom words
+\newcommand{\authorname}{Author}
+\newcommand{\authorsname}{Authors}
+\newcommand{\supervisorname}{Supervisor}
+\newcommand{\tutorname}{Tutor}
+\newcommand{\thepartname}{Part}
+
+\ifdefined\addto{
+\addto{\captionsfrench}{\renewcommand{\authorname}{Auteur}}%
+\addto{\captionsfrench}{\renewcommand{\authorsname}{Auteurs}}%
+\addto{\captionsfrench}{\renewcommand{\supervisorname}{Superviseur}}%
+\addto{\captionsfrench}{\renewcommand{\tutorname}{Tuteur}}}
+\addto{\captionsfrench}{\renewcommand{\thepartname}{Partie}}
+\else{}
+\fi
+
+%% Title page
+\pretitle{\flushleft\Huge\textsf}
+\posttitle{\\[-.65em]\rule{\linewidth}{1.5mm}\\[-.65em]
+\ifx\thesubtitle\undefined
+\else
+\hfill{\small\itshape \thesubtitle}
+\fi
+\centering
+\vfill
+\includegraphics{../medias/universite-bordeaux.pdf}
+\vfill
+{\Huge Projet de deuxième année} \\
+\vspace{1.25em}
+\LARGE
+Master \emph{Sciences et Technologies},\\
+Mention \emph{Informatique},\\
+Parcours \emph{Cryptologie et Sécurité Informatique}.\\
+\par\hfill}
+
+%% Authors
+\preauthor{\vspace{\fill}\\
+\flushleft\textbf{\large\authorname}\\
+\small}
+\postauthor{\vspace{1em}
+\newline\textbf{\large\supervisorname}\\\thesupervisor\\
+\rule{\linewidth}{1mm}}
+
+%% Date
+\predate{\hspace{\fill}}
+\postdate{}
+
+%% Chapters style
+\chapterstyle{veelo}
+
+%% Parts style
+\renewcommand*{\thepart}{\arabic{part}}
+
+\renewcommand*{\parttitlefont}{\chaptitlefont\Huge}
+\renewcommand*{\partnamefont}{\chapnamefont\HUGE}
+\renewcommand*{\partnumfont}{\chapnumfont\HUGE}
+
+\renewcommand{\beforepartskip}{\vspace*{\fill}}
+\renewcommand{\midpartskip}{\vspace{.5em}\hrule height 1.5mm \vspace{.5em}}
+\renewcommand{\afterpartskip}{\vspace*{\fill}}
+
+%% Table of contents
+\renewcommand*{\cftpartname}{\thepartname}
+\renewcommand*{\cftpartpresnum}{\space}
+\renewcommand*{\cftpartaftersnum}{.}
+\renewcommand*{\cftpartaftersnumb}{\space}
+
+\cftpagenumbersoff{part}
+\renewcommand{\cftpartafterpnum}{\protect\\[-.75em]%
+  \protect\mbox{}\protect\hrule\par}
+
+\renewcommand{\cftchapterdotsep}{4}
+
+
+%% Report title
+\title{Techniques de fuzzings}
+\subtitle{Avec American Fuzzy Lop}
+
+%% Autors
+\authors{
+   Xavier Maso \texttt{<xavier.maso@etu.u-bordeaux.fr>} \\
+   Brendan Guevel \texttt{<brendan.guevel@etu.u-bordeaux.fr>} \\
+   Simon Duret \texttt{<simon.duret@etu.u-bordeaux.fr>}}
+
+\supervisor{Emmanuel Fleury \texttt{<emmanuel.fleury@u-bordeaux.fr>}}

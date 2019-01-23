@@ -1,0 +1,20 @@
+.PHONY: all clean
+
+PDFLATEX ?= pdflatex -shell-escape
+
+
+REPORT_PDF = report.pdf
+REPORT_TEX = report.tex
+REPORT_DEPS = $(REPORT_TEX) config.tex
+REPORT_DEPS += introduction.tex Makefile
+
+
+all: $(REPORT_PDF)
+
+$(REPORT_PDF): $(REPORT_DEPS)
+	$(PDFLATEX) $(REPORT_TEX)
+	$(PDFLATEX) $(REPORT_TEX)
+	$(PDFLATEX) $(REPORT_TEX)
+
+clean:
+	rm -f *.aux *.log *.out *.toc *.pdf

@@ -1,4 +1,4 @@
-.PHONY: all clean
+.PHONY: all clean distclean
 
 PDFLATEX ?= pdflatex -shell-escape
 
@@ -15,6 +15,8 @@ $(REPORT_PDF): $(REPORT_DEPS)
 	$(PDFLATEX) $(REPORT_TEX)
 	$(PDFLATEX) $(REPORT_TEX)
 	$(PDFLATEX) $(REPORT_TEX)
+
+distclean: clean
 
 clean:
 	rm -f *.aux *.log *.out *.toc *.pdf

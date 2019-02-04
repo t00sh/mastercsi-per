@@ -1,4 +1,4 @@
-.PHONY: all clean report slides fuzz help
+.PHONY: all clean distclean report slides fuzz help
 
 REPORT_PATH = report/
 SLIDES_PATH = slides/
@@ -34,6 +34,15 @@ clean:
 	find . -name "*~" -delete
 
 ########################################
+# Rule to distclean everything
+########################################
+distclean:
+	cd $(REPORT_PATH) && make distclean
+	cd $(SLIDES_PATH) && make distclean
+	cd $(FUZZ_PATH) && make distclean
+	find . -name "*~" -delete
+
+########################################
 # Help message
 ########################################
 help:
@@ -44,4 +53,6 @@ help:
 	@echo "make report    -> Build report"
 	@echo "make slides    -> Build slides"
 	@echo "make fuzz      -> Setup fuzzing environment"
+	@echo "make clean     -> Clean temporary files"
+	@echo "make distclean -> Clean everything"
 	@echo "make help      -> Display this help message"

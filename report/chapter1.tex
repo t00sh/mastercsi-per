@@ -1,5 +1,131 @@
 \chapter{Présentation d'AFL}
 
+Le fuzzing est une technique très utilisée en informatique pour découvrir
+des bugs dans un programme. Elle consiste à générer des entrées aléatoires
+ou construites intelligemment, dans le but d'essayer de faire crasher le
+programme.
+
+American fuzzy lop (AFL) est un logiciel open source de fuzzing qui utilise
+un algorithme génétique pour générer des entrées à envoyer au programme à
+fuzzer. Le fonctionnement d'un algorithme génétique consiste à utiliser
+une population qui va évoluer pour essayer de garder "les meilleurs" de la
+population et également créer de nouveaux bons candidats.
+
+Typiquement ici, les individus de la population seront des entrées au
+programme à tester. Pour savoir si un individu (une entrée) est intéressant
+à garder pour la population, on regardera ici si il produit une
+exécution nouvelle du programme par rapport à la population précédente. La
+section \ref{nouveaux_comportements} explique comment les individus sont
+gardés ou rejetés lors du déroulement de l'algorithme génétique.
+
+Pour créer de nouveaux individus à la population, les algorithmes
+génétiques utilisent plusieurs techniques, par exemple ils peuvent
+"fusionner" deux individus, ou faire des mutations à partir d'un individu
+donné.
+
+\section{Instrumentation}\label{instrumentation}
+
+Toute l'exploration d'un fuzzer comme AFL consiste à  essayer de trouver le
+plus de chemins d'exécution différents dans le binaire.
+
+Il faut donc pour cela un moyen de différencier quels chemins ont été pris
+entre deux exécutions données.
+
+Lorsqu'un programme est compilé avec AFL, ce dernier instrumente donc le
+binaire autour des points de branchement (conditions, boucles).
+
+L'instrumentation est très simple, et se résume au code C suivant ajouté à
+chaque point de branchement :
+
+\begin{lstlisting}
+  cur_location = <COMPILE_TIME_RANDOM>;
+  shared_mem[cur_location ^ prev_location]++;
+  prev_location = cur_location >> 1;
+\end{lstlisting}
+
+Le tableau \lstinline{shared_mem[]} fait 64 kB. En notant BB\_src le basic
+bloc avant un branchement et BB\_dst celui après, le tableau peut être vu
+comme un dictionnaire dont les clefs sont des couples (BB\_src, BB\_dst) et
+les valeurs associées sont le nombre de fois où cette suite de basic blocs
+a été prise dans l'exécution associée.
+
+L'idée derrière le fait d'associer une valeur aléatoire à la compilation
+pour un basic bloc est de simplifier l'édition de liens des projets complexes, et
+aussi d'uniformiser la répartition des couples (BB\_src, BB\_dst) dans le
+tableau.
+
+L'opération de shift peut paraître étrange à première vue, mais c'est en
+fait une astuce pour pouvoir différencier la suite de basic bloc A->B de
+son opposé B->A, et aussi pour différencier les boucles
+(A\textasciicircum A serait égal à B\textasciicircum B sinon).
+
+À la fin d'une exécution du programme, l'état du tableau
+\lstinline{shared_mem[]} représente quels couples (BB\_src, BB\_dst) ont
+été accédés et combien de fois.
+
+\section{Détection des nouveaux comportements}\label{nouveaux_comportements}
+
+Comme dit plus haut, le but d'AFL est d'explorer le plus de chemins
+d'exécutions différents. Un moyen simple de savoir si deux exécutions
+ont produit deux chemins différents serait de comparer leur trace à
+l'aide du tableau décrit dans la section précédente.
+
+Ce n'est cependant pas exactement la méthode retenue par AFL. La raison
+étant d'éviter la comparaison parfois couteuse entre des traces
+d'exécutions complexes, et également éviter d'avoir une explosion
+combinatoire des traces.
+
+AFL utilise donc deux méthodes pour savoir si une nouvelle trace d'exécution
+est à garder pour le prochain round d'input ou pas.
+
+\subsubsection{Nouveaux tuples}
+Le premier test est de savoir si une nouvelle trace d'exécution
+contient de nouveaux tuples (BB\_src, BB\_dst). Par exemple, si on dispose
+déjà dans notre base d'entrées de la trace d'exécution :
+
+\#1: A -> B -> B -> A -> C -> D
+
+Et que la trace suivante est produite par une exécution :
+
+\#2: A -> B -> A -> B -> A -> C
+
+Alors cette dernière trace \#2 ne sera pas gardée pour le prochain round
+d'input, car elle ne contient pas de nouveaux tuples.
+
+En revanche si on considère la trace :
+
+\#3: A -> B -> C -> D
+
+Celle-ci sera gardée pour le prochain round car elle contient le tuple
+(B -> C) qui n'apparait pas dans la trace \#1.
+
+\subsubsection{Catégories}
+
+La deuxième façon qu'utilise AFL pour savoir si une trace est
+intéressante à conserver consiste à compter le nombre d'apparition de
+chaque tuple dans une trace.
+
+AFL range ces nombres dans des catégories grossières :
+
+1, 2, 3, 4-7, 8-15, 16-31, 32-127, 128+
+
+Un changement du nombre d'apparition à l'intérieur d'une catégorie
+est rejeté, alors qu'un changement entre deux catégories est jugé
+pertinent.
+
+Si on reprend l'example \#1 précédent et que l'on considère la trace :
+
+\#4: A -> B -> A -> B
+
+Une première constatation est de voir que la trace \#4 ne contient pas de
+nouveaux tuples par rapport à la trace \#1, et on devrait donc s'attendre
+à voir cette nouvelle trace rejetée. Cependant si on compte le nombre
+d'apparition du tuple (A -> B) dans ces deux traces, on remarque que le
+nombre passe de 1 à 2, ce qui correspondant à un changement de catégorie
+selon la répartition donnée plus haut.
+
+La trace \#4 sera donc conservée pour la prochain round d'input d'AFL.
+
 \section{Améliorations, optimisations}
 
 Une manière directe d'implémenter un logiciel de Fuzzing est de faire exécuter de multiples instances du programme à tester sur des entrées différentes à l'aide d'\lstinline{execve()}\footnote{\url{https://linux.die.net/man/2/execve}}.
@@ -63,3 +189,4 @@ On notera en particulier :
   \item{} Exécution du programme par afl-fuzz \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L2361-L2382};
   \item{} Et dans \url{https://github.com/mirrorer/afl/blob/master/afl-as.h}, avec les fonctions \lstinline{__afl_forkserver}, \lstinline{__afl_fork_resume}, \lstinline{__afl_fork_wait_loop} et la variable \lstinline{__afl_fork_pid}, le code injecté dans le programme cible.
 \end{itemize}
+

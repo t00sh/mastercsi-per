@@ -1,0 +1,65 @@
+\chapter{Présentation d'AFL}
+
+\section{Améliorations, optimisations}
+
+Une manière directe d'implémenter un logiciel de Fuzzing est de faire exécuter de multiples instances du programme à tester sur des entrées différentes à l'aide d'\lstinline{execve()}\footnote{\url{https://linux.die.net/man/2/execve}}.
+Dès lors, le Fuzzer peut détecter des corruptions mémoires en utilisant \lstinline{waitpid()} \footnote{\url{https://manpage.me/?q=waitpid}} sur le processus fils (le programme à tester ayant reçu une entrée particulière) pour vérifier s'il meurt en recevant un signal \lstinline{SIGSEGV}, \lstinline{SIGABRT} ou autre, de la part du noyau.
+
+Cette approche peut se révéler lente, ou tout du moins inefficace : en effet, chaque exécution du programme à tester passe un temps non négligeable à charger le programme en mémoire, linker les librairies dynamiquement ou attendre le noyau lors de l'appel à \lstinline{execve()}.
+
+AFL fonctionne différemment, et tire avantage de deux optimisations, décrites dans le Whitepaper présentant son fonctionnement (\cite[section 10 : The fork server]{technical-details}): le modèle "fork server" et le mode "persistent".
+
+
+\subsection{Le modèle "fork server"}
+
+Ce modèle est présenté dans l'article "Fuzzing random programs without execve()"\cite{fuzzing-binaries-without-execve} présent sur le blog d'AFL.
+
+\subsubsection{Copy-On-Write (COW)}
+
+COW est une stratégie d'optimisation de la mémoire, qui permet aussi de gagner du temps lors de la création d'un processus par un autre lors d'un \lstinline{fork()}\footnote{\url{https://linux.die.net/man/2/fork}}.
+
+En temps normal, lorsque le processus enfant est créé, sa mémoire est initialisée avec une copie de la mémoire du processus père.
+Avec COW, la mémoire du processus enfant pointe vers celle du processus père, mais il ne peut pas y écrire : il n'y a pas besoin de faire de copie, et la mémoire du père reste consistante de son point de vue.
+Si l'enfant a besoin d'écrire dans sa mémoire, alors la copie est vraiment faite, et le pointeur est modifié.
+COW est un mécanisme transparent pour chacun des processus.
+
+\subsubsection{"fork server"}
+Une première technique permettant à AFL de gagner du temps au lancement du programme testé est de "démarrer" celui-ci une seule et unique fois.
+Ainsi, le système n'exécute qu'un seul appel à \lstinline{execve()} pour charger le programme en mémoire.
+
+Cependant, pour pouvoir tester le programme sur de multiples instances, AFL a besoin d'un mécanisme pour relancer le programme sur des entrées différentes.
+La solution implémentée exécute un appel à \lstinline{fork()} pour créer un processus fils, copie exacte du père contenant le programme à tester, dont l'entrée sera cependant différente.
+Cet appel à \lstinline{fork()} permet notamment de tirer avantage du COW présenté précédemment.
+
+Cette implémentation soulève quelques questions.
+
+\paragraph{Quel code exécute l'appel à \lstinline{fork()} ? Où se passe cet appel ?}
+
+L'essentiel se passe au cours de l'exécution du programme cible, par du code injecté lors de l'instrumentation, par afl-gcc.
+% TODO: référence à une section précédente, où est détaillée le fonctionnement de AFL
+Comme l'intérêt est d'avoir chaque processus fils s'exécutant sur une entrée, il est nécessaire de mettre en pause le père avant que cette dernière soit traitée.
+Généralement, le code sera injecté (et donc exécuté) avant le \lstinline{main()} du programme.
+
+Quand ce point est atteint lors de l'exécution du programme, le code injecté attend des commandes de la part d'afl-fuzz.
+À la réception du message "go", le programme exécute alors son appel à \lstinline{fork()}.
+Alors, dans le processus fils, c'est le code originel du programme testé qui reprend la main et poursuit son exécution légitime sur l'entrée qui lui est fournie.
+
+% TODO:
+% \paragraph{Comment chaque entrée est passée par AFL au processus fils ?}
+
+\paragraph{Comment afl-fuzz détecte-t-il les crashs ?}
+
+Avec cette méthode, afl-fuzz n'est plus le parent direct des processus s'exécutant sur les entrées qu'il fournit.
+Il ne peut donc pas utiliser \lstinline{waitpid()} directement pour surveiller les crashs potentiels.
+
+C'est le code injecté dans le programme cible lors de l'instrumentation (celui sur lequel l'exécution est "pausée" au moment du \lstinline{main()}) qui se charge d'attendre avec \lstinline{waitpid()}, et de transférer le résultat de l'exécution du fils, de celui-ci vers afl-fuzz.
+
+\paragraph{Implémentation}
+
+Le code relatif à cette fonctionnalité est dispersé à travers plusieurs fichiers.
+On notera en particulier :
+\begin{itemize}
+  \item{} Gestion du "fork server" dans afl-fuzz : \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L1968-L2255};
+  \item{} Exécution du programme par afl-fuzz \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L2361-L2382};
+  \item{} Et dans \url{https://github.com/mirrorer/afl/blob/master/afl-as.h}, avec les fonctions \lstinline{__afl_forkserver}, \lstinline{__afl_fork_resume}, \lstinline{__afl_fork_wait_loop} et la variable \lstinline{__afl_fork_pid}, le code injecté dans le programme cible.
+\end{itemize}

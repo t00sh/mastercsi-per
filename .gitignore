@@ -64,3 +64,12 @@ dkms.conf
 *.out
 report/*.pdf
 slides/*.pdf
+
+# Fuzzer files
+fuzz/fuzz-*/out
+fuzz/radare2-asan-install/
+fuzz/radare2-install/
+fuzz/radare2-src-asan/
+fuzz/radare2-src/
+afl-latest/
+*.tgz

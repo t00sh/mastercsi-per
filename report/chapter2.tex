@@ -97,3 +97,306 @@ Cela nous a permis de découvrir notamment un problème dans l'outil \lstinline{
 L'analyse de ces différents problèmes sont présentés dans la section suivante.
 
 \section{Problèmes constatés}
+
+\subsection{radare2 (interpréteur) - read out of bounds}
+
+Nous avons tout d'abords identifié un problème de type ``read out-of-bounds'' sur un buffer situé dans le heap. Le bug se situe dans l'exécution de la commande \lstinline{dbw} dans l'interpréteur Radare2. Voici un extrait du log de ASAN lorsque l'on exécute cette commande dans Radare2 :
+
+\begin{lstlisting}
+  ==30389==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x60200006c694 at pc 0x7f6213972144 bp 0x7ffed25f8010 sp 0x7ffed25f8008
+  READ of size 1 at 0x60200006c694 thread T0
+  #0 0x7f6213972143 in r_str_trim_ro .../radare2-src-asan/libr/util/str_trim.c:89
+  #1 0x7f6219c81e68 in r_core_cmd_bp .../radare2-src-asan/libr/core/cmd_debug.c:3361
+  ...
+\end{lstlisting}
+
+Si on analyse le code de la fonction \lstinline{r_str_trim_ro} dans le fichier \path{libr/util/str_trim.c}, nous constatons qu'il s'agit simplement d'un code permettant d'avancer le pointeur de la chaîne passée en paramètre jusqu'au prochain caractère n'étant pas un espace :
+
+\begin{lstlisting}[language=C]
+R_API const char *r_str_trim_ro(const char *str) {
+  if (str) {
+    for (; *str && IS_WHITECHAR (*str); str++) {
+      ;
+    }
+  }
+  return str;
+}
+\end{lstlisting}
+
+Le problème se situe dans la fonction \lstinline{r_core_cmd_bp} qui s'occupe de parser les commandes commençant par 'd' :
+
+\begin{lstlisting}[language=C]
+  ...
+  case 'w': // "dbw"
+      input++; // skip 'w'
+      watch = true;
+      // passthru
+  case ' ': ;// "db"
+      #define DB_ARG(x) r_str_word_get0(str, x)
+      char *str = strdup (r_str_trim_ro (input + 2));
+  ...
+\end{lstlisting}
+
+On voit ici que le troisième caractère est comparé à travers un switch-case et que si la commande est ``dbw'', le pointeur \lstinline{input} est incrémenté : il pointe maintenant sur la chaîne ``w''. Le problème, c'est qu'il n'y a pas de \lstinline{break} à la fin de ce \lstinline{case}, ce qui fait que le deuxième \lstinline{case} est également exécuté. On voit alors que la fonction \lstinline{r_str_trim_ro} est appliqué sur un buffer situé un caractère en dehors de la chaîne.
+
+\subsection{radare2 (interpréteur) - double free}
+
+Un double free est également présent dans cette même fonction (\lstinline{r_core_cmd_bp}). Le bug se situe dans le morceau de code suivant :
+
+\begin{lstlisting}[language=C]
+case ' ': ;// "db"
+  #define DB_ARG(x) r_str_word_get0(str, x)
+  char *str = strdup (r_str_trim_ro (input + 2));
+  int i = 0;
+  int sl = r_str_word_set0 (str);
+
+  for ( ; i < sl; i += 1 + (watch ? 1 : 0)) {
+    if (*DB_ARG(i) == '-') {
+      /* ... */
+    } else {
+      if (watch) {
+	if (sl % 2 == 0) {
+	  if (!strcmp (DB_ARG (i + 1), "r")) {
+	    rw = R_BP_PROT_READ;
+	  } else if (!strcmp (DB_ARG (i + 1), "w")) {
+            /* ... */
+	  } else {
+	    r_core_cmd_help (core, help_msg_dbw);
+            /* free 1 */
+	    free (str);
+	    break;
+	  }
+        } else {
+	  r_core_cmd_help (core, help_msg_dbw);
+          /* free 1-bis */
+	  free (str);
+	  break;
+        }
+      }
+      /* ... */
+    }
+  }
+  /* free 2 */
+  free (str);
+  break;
+
+case 'i':
+/* ... */
+
+\end{lstlisting}
+
+Ici, on parcourt les arguments situés après la commande \lstinline{dbw}. Si le deuxième argument n'est ni ``r'', ``w'' ou ``rw'' (free 1) ou que le nombre d'arguments est impair (free 1-bis) le pointeur \lstinline{str} est free une fois et on sort de la boucle avec le \lstinline{break}. Ici le développeur voulait sans doute sortir du \lstinline{switch} également, mais un deuxième \lstinline{free} est appliqué sur ce même pointeur (free 2) : nous avons une vulnérabilité de type double free.
+
+On peut par exemple taper dans \lstinline{radare2} la commande \lstinline{dbw a a} ou \lstinline{dbw r r r} pour déclencher le bug. Ici, un morceau de trace généré par ASan au moment du double free :
+\begin{lstlisting}
+  ==31123==ERROR: AddressSanitizer: attempting double-free on 0x60200006c610 in thread T0:
+  #0 0x7fcaf8889a10 in free (/usr/lib/x86_64-linux-gnu/libasan.so.3+0xc1a10)
+  #1 0x7fcaf7e5760a in r_core_cmd_bp .../radare2-src-asan/libr/core/cmd_debug.c:3416
+
+  freed by thread T0 here:
+  #0 0x7fcaf8889a10 in free (/usr/lib/x86_64-linux-gnu/libasan.so.3+0xc1a10)
+  #1 0x7fcaf7e5763a in r_core_cmd_bp .../radare2-src-asan/libr/core/cmd_debug.c:3384
+\end{lstlisting}
+
+\subsection{radare2 (interpréteur) - bad pointer dereference}
+
+Nous avons également découvert une erreur de segmentation dût à une erreur de typage dans une chaîne de format. Le problème peut être constaté lorsque l'on tape \lstinline{aa} suivi de \lstinline{pifjA} dans l'outil \lstinline{radare2} :
+
+\begin{lstlisting}
+  ==2181==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000041 (pc 0x7f36f2a795b2 bp 0x7ffd4cb07950 sp 0x7ffd4cb07088 T0)
+  #0 0x7f36f2a795b1  (/usr/lib/x86_64-linux-gnu/libasan.so.3+0xd85b1)
+  #1 0x7f36f2a2b731  (/usr/lib/x86_64-linux-gnu/libasan.so.3+0x8a731)
+  #2 0x7f36f2a2d61d in __interceptor_vsnprintf (/usr/lib/x86_64-linux-gnu/libasan.so.3+0x8c61d)
+  #3 0x7f36f1f95439 in r_core_cmdf .../radare2-src-asan/libr/core/cmd.c:3903
+  #4 0x7f36f20692b4 in cmd_print .../radare2-src-asan/libr/core/cmd_print.c:4496
+  ...
+\end{lstlisting}
+
+Si on analyse la fonction \lstinline{cmd_print} à l'endroit du segfault, nous voyons ceci :
+
+\begin{lstlisting}[language=C]
+case 'f': // "pif"
+  if (input[2] == '?') { // "pif?"
+    /* ... */
+  } else if (input[2] == 'j') {
+    r_core_cmdf (core, "pdfj%s", input[3]);
+  } else if (input[2] == 'c') { // "pifc"
+\end{lstlisting}
+
+Ici, \lstinline{input[3]} est de type \lstinline{char} alors que le format ``\%s" attend un type \lstinline{char*}. Le caractère sera alors considéré comme l'adresse à afficher.
+En effet, ici cette chaîne de caractère est directement passée à \lstinline{vsnprintf} comme l'on peut le constater si l'on regarde la fonction \lstinline{r_core_cmdf} :
+
+\begin{lstlisting}[language=C]
+R_API int r_core_cmdf(RCore *core, const char *fmt, ...) {
+  char string[4096];
+  int ret;
+  va_list ap;
+  va_start (ap, fmt);
+  vsnprintf (string, sizeof (string), fmt, ap);
+  ret = r_core_cmd (core, string, 0);
+  va_end (ap);
+  return ret;
+}
+\end{lstlisting}
+
+\subsection{radare2 (parser PE) - double free}
+
+Nous avons trouvé une vulnérabité de type ``double free'' dans le parser du format PE (Portable Executable). Il est en effet possible de construire un fichier PE contenant deux noms de ressources, pointant au même endroit. Le problème se situe dans la fonction \lstinline{_parse_resource_directory} :
+
+\begin{lstlisting}[language=C]
+static void _parse_resource_directory(struct PE_(r_bin_pe_obj_t) *bin, Pe_image_resource_directory *dir, ut64 offDir, int type, int id, HtUU *dirs, char *resource_name) {
+  /* ... */
+
+  for (index = 0; index < totalRes; index++) {
+    /* ... */
+    ut8 *resourceEntryName = NULL;
+    if (entry.u1.s.NameIsString) { /* [1] */
+      /* ... */
+      resourceEntryName = calloc (resourceEntryNameLength + 1, sizeof (ut8));
+      /* ... */
+    }
+
+    if (entry.u2.s.DataIsDirectory) { /* [2] */
+      /* ... */
+      if (resource_name && resourceEntryName) {
+        /* ... */
+        R_FREE (resource_name);
+      }
+      /* [3] */
+      _parse_resource_directory (bin, &identEntry,
+        entry.u2.s.OffsetToDirectory, type, entry.u1.Id, dirs, (char *)resourceEntryName);
+      continue;
+    }
+
+    /* ... */
+    r_pe_resource *rs = R_NEW0 (r_pe_resource);
+    /* ... */
+    if (resource_name) { /* [4] */
+      rs->name = resource_name;
+    } else {
+      char numberbuf[6];
+      rs->name = strdup (sdb_itoa (id, numberbuf, 10));
+    }
+    r_list_append (bin->resources, rs);
+  }
+}
+\end{lstlisting}
+
+Pour arriver à une telle erreur, il faut un PE contenant une ressource de type directory tout en passant par [1] pour allouer le \lstinline{resource_name} et par [2] pour effectuer un appel récursif avec un \lstinline{resource_name} différent de \lstinline{NULL} en [3].
+Ensuite, cette ressource de type directory doit contenir deux entrées : \lstinline{resource_name} étant différent de \lstinline{NULL}, le \lstinline{rs->name} de chaque entrée pointera alors sur la même zone mémoire [4].
+
+Lorsque l'on quitte \lstinline{radare2}, la fonction \lstinline{_free_resource} est appelée sur chacune de nos deux entrées :
+
+\begin{lstlisting}[language=C]
+static void _free_resources(r_pe_resource *rs) {
+  if (rs) {
+    free (rs->name);
+    /* ... */
+  }
+}
+\end{lstlisting}
+
+On déclenche alors un double free comme le montre le message de ASan suivant :
+
+
+\begin{lstlisting}
+  ==19003==ERROR: AddressSanitizer: attempting double-free on 0x631000028800 in thread T0:
+  #0 0x7f678602ca10 in free (/usr/lib/x86_64-linux-gnu/libasan.so.3+0xc1a10)
+  #1 0x7f6784464350 in _free_resources .../radare2-src-asan/libr/..//libr/bin/p/../format/pe/pe.c:1218
+  #2 0x7f677f1ad4c5 in r_list_delete .../radare2-src-asan/libr/util/list.c:107
+  #5 0x7f67844a5e7f in Pe32_r_bin_pe_free .../radare2-src-asan/libr/..//libr/bin/p/../format/pe/pe.c:3526
+
+  0x631000028800 is located 0 bytes inside of 65536-byte region [0x631000028800,0x631000038800)
+    freed by thread T0 here:
+    #0 0x7f678602ca10 in free (/usr/lib/x86_64-linux-gnu/libasan.so.3+0xc1a10)
+    #1 0x7f6784464350 in _free_resources .../radare2-src-asan/libr/bin/format/pe/pe.c:1218
+\end{lstlisting}
+
+
+\subsection{rax2 (calculatrice hexa) - use after free}
+
+Un problème de type use-after-free a été découvert dans l'outil \lstinline{rax2} grâce à ASan.
+AFL n'ayant à priori pas trouvé de crash lors de son exécution, nous avons en effet décidé de relancer la version de \lstinline{rax2} compilé avec ASan sur l'ensemble des entrées générées par le fuzzer.
+
+Sur une de ces entrée, nous avons obtenu le message suivant :
+
+\begin{lstlisting}
+  ==6459==ERROR: AddressSanitizer: heap-use-after-free on address 0x60200000eff6 at pc 0x7f806a1b1129 bp 0x7ffd36d90400 sp 0x7ffd36d903f8
+  READ of size 1 at 0x60200000eff6 thread T0
+  #0 0x7f806a1b1128 in cin_get .../radare2-src-asan/libr/util/calc.c:220
+  #1 0x7f806a1b1128 in get_token .../radare2-src-asan/libr/util/calc.c:263
+  #2 0x7f806a1b2794 in prim .../radare2-src-asan/libr/util/calc.c:140
+  #3 0x7f806a1b1630 in term .../radare2-src-asan/libr/util/calc.c:108
+  #4 0x7f806a1b207c in expr .../radare2-src-asan/libr/util/calc.c:88
+  #5 0x7f806a1b31a6 in r_num_calc .../radare2-src-asan/libr/util/calc.c:406
+  #6 0x7f806a0fbbc3 in r_num_math .../radare2-src-asan/libr/util/unum.c:412
+  ...
+  freed by thread T0 here:
+  #0 0x7f806a903a10 in free (/usr/lib/x86_64-linux-gnu/libasan.so.3+0xc1a10)
+  #1 0x7f806a0fc035 in r_num_tailff .../radare2-src-asan/libr/util/unum.c:762
+\end{lstlisting}
+
+Nous observons alors que la commande \lstinline{echo "0xF..1" | rax2} est à l'origine de ce message.
+Le principal problème se situe dans la fonction \lstinline{r_num_tailff}, appelée lorsqu'elle rencontre une chaîne de type "0xF.." :
+
+\begin{lstlisting}[language=C]
+static ut64 r_num_tailff(RNum *num, const char *hex) {
+  char *p;
+  int i;
+  /* ... */
+  p = malloc (strlen (hex) + 10);
+  if (p) {
+    /* ... */
+    if (isxdigit ((ut8)hex[0])) {
+      n = r_num_math (num, p);
+    } else {
+      /* ... */
+    }
+    free (p);
+  }
+  /* ... */
+}
+\end{lstlisting}
+
+Ici, le pointeur \lstinline{p} est passé à la fonction \lstinline{r_num_math}, puis \lstinline{free} à la suite.
+Le problème, c'est que ce pointeur est assigné au champ \lstinline{num->nc->calc_buf} lors de \lstinline{r_num_math} :
+
+\begin{lstlisting}[language=C]
+static void load_token(RNum *num, RNumCalc *nc, const char *s) {
+  /* ... */
+  nc->calc_buf = s;
+  /* ... */
+}
+\end{lstlisting}
+
+Plus tard, lors du traitement du token "1" de notre chaîne de caractère, la fonction \lstinline{cin_get} est exécutée :
+
+\begin{lstlisting}[language=C]
+static int cin_get(RNum *num, RNumCalc *nc, char *c) {
+  /* ... */
+  *c = nc->calc_buf[nc->calc_i];
+  /* ... */
+}
+\end{lstlisting}
+
+Ici, le buffer \lstinline{nc->calc_buf} pointe vers une adresse qui a été libérée dans notre fonction \lstinline{r_num_tailff} : nous déclenchons un use-after-free en lecture.
+
+
+L'ensemble de ces problèmes ont été remontés à l'équipe de Radare2 et corrigé.
+Le tableau ci-dessous résume l'ensemble des bugs trouvés et analysés lors de ce projet avec un lien vers l'issue et le commit corrigeant celui-ci.
+
+\begin{tabularx}{\textwidth}{|r|c|X|c|c|}
+    \hline
+    \textbf{Outil} & \textbf{Code impacté} & \textbf{Classe de bug} & \textbf{Issue} & \textbf{Commit} \\
+    \hline
+    radare2 & interpréteur & read out-of-bounds & \href{https://github.com/radare/radare2/issues/13031}{\#13031} & \href{https://github.com/radare/radare2/commit/ce73397}{ce73397} \\
+    \hline
+    radare2 & interpréteur & double free & \href{https://github.com/radare/radare2/issues/13032}{\#13032} & \href{https://github.com/radare/radare2/commit/26baccd}{26baccd} \\
+    \hline
+    radare2 & interpréteur & bad pointer dereference & \href{https://github.com/radare/radare2/issues/13033}{\#13033} & \href{https://github.com/radare/radare2/commit/4cdc50f}{4cdc50f} \\
+    \hline
+    radare2 & parser PE & double free & \href{https://github.com/radare/radare2/issues/13035}{\#13035} & \href{https://github.com/radare/radare2/commit/868bda4}{868bda4} \\
+    \hline
+    rax2 & calculatrice hexa & use after free & \href{https://github.com/radare/radare2/issues/13039}{\#13039} & \href{https://github.com/radare/radare2/commit/b4504f9}{b4504f9} \\
+    \hline
+\end{tabularx}

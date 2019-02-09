@@ -42,7 +42,8 @@ La version compilée avec ASAN, nous pouvons utiliser ces commandes :
   $ CC=path-to-afl-gcc AFL_USE_ASAN=1 ./sys/user.sh --install-path ../radare2-install-asan
 \end{lstlisting}
 
-Il faut savoir que ASAN peut difficilement être utilisé avec AFL étant donné qu'il demande énormément de mémoire.
+Il faut savoir que ASAN peut difficilement être utilisé avec AFL.
+En effet, en moyenne, l'instrumentation effectuée par ASAN multiplie par 3.4 la mémoire utilisée par le programme\cite{asan}, et qu'alors AFL limite la quantité de mémoire utilisée pendant le fuzzing d'un programme pour préserver la stabilité du système.
 Pour pouvoir l'utiliser avec AFL il aurait été nécessaire de le compiler en 32bits, ce que nous n'avons pas réussi à faire sur les serveurs du CREMI.
 
 \subsection{Écriture des entrées initiales pour le fuzzing}

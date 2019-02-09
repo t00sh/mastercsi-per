@@ -13,14 +13,14 @@ Notre approche concernant le fuzzing de Radare2 s'est déroulé comme suit :
 \begin{itemize}
 \item Récupération des sources et compilation de AFL ;
 \item Récupération des sources de Radare2, et compilation de celui-ci avec \lstinline{afl-gcc} afin d'instrumenter le programme ;
-\item Compréhension de la suite d'outils de Radare2, ciblage des entrées utilisateur et écriture des jeux des tests ;
+\item Compréhension de la suite d'outils de Radare2, ciblage des entrées utilisateur et écriture des jeux de tests ;
 \item Lancement de plusieurs instances d'AFL sur nos jeux de tests précédents ;
 \item Analyse des crashs obtenus et des différentes mutations avec ASAN.
 \end{itemize}
 
 \subsection{Installation de AFL}
 
-Pour récupérer les sources de AFL, il suffit de se rendre sur le site de Icamtuf (\href{http://lcamtuf.coredump.cx/afl/releases/afl-latest.tgz}{afl-latest}) pour récupérer l'archive, et de compiler le compiler en tapant simplement \lstinline{make} une fois décompressée.
+Pour récupérer les sources de AFL, il suffit de se rendre sur le site de lcamtuf (\href{http://lcamtuf.coredump.cx/afl/releases/afl-latest.tgz}{afl-latest}) pour récupérer l'archive, et de le compiler en tapant simplement \lstinline{make} une fois décompressée.
 
 \subsection{Instrumentation de Radare2 grâce à \lstinline{afl-gcc}}
 

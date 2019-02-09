@@ -24,7 +24,8 @@ Pour récupérer les sources de AFL, il suffit de se rendre sur le site de Icamt
 
 \subsection{Instrumentation de Radare2 grâce à \lstinline{afl-gcc}}
 
-Nous avons compilé deux versions de Radare2 : une version normale instrumenté avec \lstinline{afl-gcc} et une autre compilé avec ASAN afin de découvrir de nouveaux problèmes. La première version peut se compiler de cette manière :
+Nous avons compilé deux versions de Radare2 : une version normale instrumentée avec \lstinline{afl-gcc} et une autre compilée avec ASAN afin de découvrir de nouveaux problèmes.
+La première version peut se compiler de cette manière :
 
 \begin{lstlisting}
   $ git clone https://github.com/radare/radare2.git radare2
@@ -33,7 +34,7 @@ Nous avons compilé deux versions de Radare2 : une version normale instrumenté 
   $ CC=path-to-afl-gcc ./sys/user.sh --install-path ../radare2-install
 \end{lstlisting}
 
-La version compilée avec ASAN, nous pouvons utiliser ces commandes :
+Pour obtenir une version compilée avec ASAN, nous pouvons utiliser ces commandes :
 
 \begin{lstlisting}
   $ git clone https://github.com/radare/radare2.git radare2-asan
@@ -52,13 +53,13 @@ Maintenant, il est nécessaire de choisir quels sont les parties de Radare2 que 
 Nous avons tenté de fuzzer les composants suivants :
 
 \begin{itemize}
-\item radare2 : il s'agit du programme principale du projet Radare2.
+\item radare2 : il s'agit du programme principal du projet Radare2.
   Celui-ci peut prendre en paramètre des scripts exécutant des commandes et un fichier binaire à analyser.
 
-  Nous avons choisi de tester à la fois le parsing des scripts passés à radare2, et à fois le parser des formats de fichiers binaires.
+  Nous avons choisi de tester à la fois le parsing des scripts passés à radare2, et à la fois le parser des formats de fichiers binaires.
 \item rasm2 : il s'agit d'un programme permettant de désassembler des instructions codées en hexadécimal passées dans un fichier.
 \item rax2 : une calculatrice supportant plusieurs bases (binaire, hexadécimal).
-\item rafind2 : un outil permettant de donner des informations sur le type de fichier passé en paramètre (à la manière de la commande \lstinline{file})
+\item rafind2 : un outil permettant de donner des informations sur le type de fichier passé en paramètre (à la manière de la commande \lstinline{file}).
 \item rabin2 : un outil pouvant donner différentes informations sur le fichier binaire passé en paramètre (sections, segments...).
 \end{itemize}
 
@@ -70,9 +71,9 @@ Pour les outils \lstinline{rasm2}, \lstinline{rax2} et \lstinline{radare2} (part
 
 Une fois tout ce travail effectué, nous avons lancé une instance de \lstinline{afl-fuzz} pour chaque partie du logiciel testé.
 Pour cela, nous avons utilisé les serveurs de calculs (\path{mcgonagall.emi.u-bordeaux.fr}) mis à disposition du CREMI possédant pas moins de 48 CPUS AMD64 et 128 Go de mémoire RAM.
-Après environ 3 jours, nous avons découvert un certains nombre de crashs trouvés grâce à nos jeux de tests et AFL.
+Après environ trois jours, nous avons obtenu un certains nombre de crashs grâce à nos jeux de tests et AFL.
 
-Chaque instance de AFL peut être lancée de la manière suivante, où le dossier \path{in} contient nos jeux de tests initiaux.
+Chaque instance de AFL peut être lancée de la manière suivante, où le dossier \path{in/} contient nos jeux de tests initiaux.
 Par exemple, pour fuzzer les scripts de radare2 :
 
 \begin{lstlisting}
@@ -88,10 +89,10 @@ Ci-dessous, le résultat d'une des instances de AFL lancée sur l'outil \lstinli
 
 \subsection{Analyse des résultats obtenus}
 
-Après quelques jours de fuzzing, nous avons obtenus 10 crashs sur le parsing des commandes \lstinline{radare2} et un crash sur le parsing des fichiers binaires (toujours sur l'outil \lstinline{radare2}).
-Les fichiers générant ces crashs sont stockés dans notre dossier \path{out/crashes}, les entrées s'exécutant en plus de une seconde (temps de timeout par défaut de AFL) dans le dossier \path{out/hangs} et l'ensemble des mutations dans le dossier \path{out/queue}.
+Après quelques jours de fuzzing, nous avons obtenus dix crashs sur le parsing des commandes \lstinline{radare2} et un crash sur le parsing des fichiers binaires (toujours sur l'outil \lstinline{radare2}).
+Les fichiers générant ces crashs sont stockés dans le dossier \path{out/crashes/}, les entrées s'exécutant en plus d'une seconde (temps de timeout par défaut de AFL) dans le dossier \path{out/hangs/} et l'ensemble des mutations dans le dossier \path{out/queue/}.
 
-Afin de découvrir d'autres problèmes potentiels, nous avons ré-exécuté notre version de Radare2 compilée avec ASAN sur l'ensemble des fichiers présents dans \path{out/queue}.
+Afin de découvrir d'autres problèmes potentiels, nous avons réexécuté notre version de Radare2 compilée avec ASAN sur l'ensemble des fichiers présents dans \path{out/queue/}.
 Cela nous a permis de découvrir notamment un problème dans l'outil \lstinline{rax2} et d'autres problèmes dans le parsing des scripts de \lstinline{radare2}.
 L'analyse de ces différents problèmes sont présentés dans la section suivante.
 

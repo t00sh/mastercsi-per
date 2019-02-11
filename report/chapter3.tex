@@ -1,0 +1,12 @@
+\chapter{Fuzzing de binaires quelconques}
+
+Jusqu'à présent, il nous a été nécessaire d'avoir accès au code source d'un programme cible pour pouvoir le tester avec AFL.
+En effet, l'instrumentation du binaire prend place lors de la compilation effectuée par \lstinline{afl-gcc}, à partir des sources de l'application victime.
+Cela peut être problématique lorsque l'on souhaite fuzzer des logiciels dont le code source n'est pas accessible (dans le cas de logiciels propriétaires par exemple).
+Pour répondre à ce problème, AFL peut s'appuyer sur le mode "user space emulation" de QEMU\footnote{\url{https://www.qemu.org/}}, qu'il utilise pour effectuer l'instrumentation du binaire "à la volée" (pendant l'exécution d'\lstinline{afl-fuzz}).
+
+De plus, nous avons toujours implicitement considéré des binaires comme étant compilés pour s'exécuter sur des architectures x86.
+Encore, le mode QEMU proposé par AFL peut nous aider à élargir notre champ d'action, en se servant de QEMU pour supporter d'autres plateformes (PowerPC, ARM, SPARC...\footnote{Pour une liste plus complète des plateformes supportées par QEMU : \url{https://qemu.weilnetz.de/doc/qemu-doc.html\#QEMU-System-emulator-for-non-PC-targets}.}).
+Une autre solution possible serait d'utiliser une version d'AFL différente que celle que nous avons présenté jusqu'à présent.
+Cette alternative injecterait du code assembleur relatif à la plateforme ciblée (en lieu et place de l'assembleur x86).
+C'est par exemple la méthode employée par le projet \lstinline{android-afl}\footnote{\url{https://github.com/ele7enxxh/android-afl}}, cherchant à fuzzer des applications mobiles Android.

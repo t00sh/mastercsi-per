@@ -34,8 +34,11 @@ entre deux exécutions données.
 Lorsqu'un programme est compilé avec AFL, ce dernier instrumente donc le
 binaire autour des points de branchement (conditions, boucles).
 
-L'instrumentation est très simple, et se résume au code C suivant ajouté à
-chaque point de branchement :
+L'instrumentation est ajoutée à la compilation directement au niveau
+assembleur à chaque point de branchement du programme, grâce à l'outil
+\listineline{afl_as}.
+
+On peut la résumer par le pseudo code suivant:
 
 \begin{lstlisting}
   cur_location = <COMPILE_TIME_RANDOM>;
@@ -43,25 +46,35 @@ chaque point de branchement :
   prev_location = cur_location >> 1;
 \end{lstlisting}
 
-Le tableau \lstinline{shared_mem[]} fait 64 kB. En notant BB\_src le basic
-bloc avant un branchement et BB\_dst celui après, le tableau peut être vu
-comme un dictionnaire dont les clefs sont des couples (BB\_src, BB\_dst) et
-les valeurs associées sont le nombre de fois où cette suite de basic blocs
-a été prise dans l'exécution associée.
+Un basic bloc d'un programme est une suite d'instruction séquentielle d'un
+programme (sans condition, ni boucle). Ainsi, si on note A un point de
+branchement dans le programme, et B le prochain point de branchement en
+partant de A, le couple (A, B) forme un basic bloc par la définition vue
+juste avant.
+
+En utilisant ces notations, le tableau \lstlisting{shared_mem[]} peut être vu
+comme un dictionnaire dont les clefs sont des couples (A, B) et les valeurs
+associées sont le nombre de fois où ce basic bloc a été pris dans
+l'exécution associée.
 
 L'idée derrière le fait d'associer une valeur aléatoire à la compilation
-pour un basic bloc est de simplifier l'édition de liens des projets complexes, et
-aussi d'uniformiser la répartition des couples (BB\_src, BB\_dst) dans le
-tableau.
+pour un point de branchement est de simplifier l'édition de liens des
+projets complexes, et aussi d'uniformiser la répartition des couples
+(A, B) dans le tableau.
+
+Le tableau \lstinline{shared_mem[]} fait 64 kB, ce qui est un bon compromis
+entre une taille suffisant grande pour éviter qu'il y ait trop de collisions
+entre deux valeurs aléatoires attribuées, et à la fois assez petite pour
+rentrer dans le cache L2 du processeur et ainsi permettre des calculs rapides.
 
 L'opération de shift peut paraître étrange à première vue, mais c'est en
-fait une astuce pour pouvoir différencier la suite de basic bloc A->B de
-son opposé B->A, et aussi pour différencier les boucles
+fait une astuce pour pouvoir différencier le basic bloc (A, B) de
+son opposé (B, A), et aussi pour différencier les boucles
 (A\textasciicircum A serait égal à B\textasciicircum B sinon).
 
 À la fin d'une exécution du programme, l'état du tableau
-\lstinline{shared_mem[]} représente quels couples (BB\_src, BB\_dst) ont
-été accédés et combien de fois.
+\lstinline{shared_mem[]} représente donc quels basic blocs ont été accédés
+et combien de fois.
 
 \section{Détection des nouveaux comportements}\label{nouveaux_comportements}
 
@@ -79,9 +92,9 @@ AFL utilise donc deux méthodes pour savoir si une nouvelle trace d'exécution
 est à garder pour le prochain round d'input ou pas.
 
 \subsubsection{Nouveaux tuples}
-Le premier test est de savoir si une nouvelle trace d'exécution
-contient de nouveaux tuples (BB\_src, BB\_dst). Par exemple, si on dispose
-déjà dans notre base d'entrées de la trace d'exécution :
+Le premier test est de savoir si une nouvelle trace d'exécution contient de
+nouveaux tuples (A, B). Par exemple, si on dispose déjà dans notre base
+d'entrées de la trace d'exécution :
 
 \#1: A -> B -> B -> A -> C -> D
 
@@ -97,7 +110,7 @@ En revanche si on considère la trace :
 \#3: A -> B -> C -> D
 
 Celle-ci sera gardée pour le prochain round car elle contient le tuple
-(B -> C) qui n'apparait pas dans la trace \#1.
+(B, C) qui n'apparait pas dans la trace \#1.
 
 \subsubsection{Catégories}
 
@@ -113,14 +126,14 @@ Un changement du nombre d'apparition à l'intérieur d'une catégorie
 est rejeté, alors qu'un changement entre deux catégories est jugé
 pertinent.
 
-Si on reprend l'example \#1 précédent et que l'on considère la trace :
+Si on reprend l'exemple \#1 précédent et que l'on considère la trace :
 
 \#4: A -> B -> A -> B
 
 Une première constatation est de voir que la trace \#4 ne contient pas de
 nouveaux tuples par rapport à la trace \#1, et on devrait donc s'attendre
 à voir cette nouvelle trace rejetée. Cependant si on compte le nombre
-d'apparition du tuple (A -> B) dans ces deux traces, on remarque que le
+d'apparition du tuple (A, B) dans ces deux traces, on remarque que le
 nombre passe de 1 à 2, ce qui correspondant à un changement de catégorie
 selon la répartition donnée plus haut.
 

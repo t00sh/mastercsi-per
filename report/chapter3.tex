@@ -10,3 +10,60 @@ Encore, le mode QEMU proposé par AFL peut nous aider à élargir notre champ d'
 Une autre solution possible serait d'utiliser une version d'AFL différente que celle que nous avons présenté jusqu'à présent.
 Cette alternative injecterait du code assembleur relatif à la plateforme ciblée (en lieu et place de l'assembleur x86).
 C'est par exemple la méthode employée par le projet \lstinline{android-afl}\footnote{\url{https://github.com/ele7enxxh/android-afl}}, cherchant à fuzzer des applications mobiles Android.
+
+\section{QEMU mode}
+
+Comme nous venons brièvement de l'annoncer, QEMU peut être utilisé avec AFL pour :
+\begin{itemize}
+  \item{} Fuzzer des binaires sans avoir accès à leur code source ;
+  \item{} Fuzzer des binaires qui ont été compilés pour s'exécuter sur des plateformes autres que x86.
+\end{itemize}
+
+\subsection{QEMU}
+
+\begin{quote}
+QEMU est un logiciel libre de machine virtuelle, pouvant émuler un processeur et, plus généralement, une architecture différente si besoin. Il permet d'exécuter un ou plusieurs systèmes d'exploitation via les hyperviseurs KVM et Xen, ou seulement des binaires, dans l'environnement d'un système d'exploitation déjà installé sur la machine.\footnote{\url{https://fr.wikipedia.org/wiki/Qemu}}
+\end{quote}
+
+\subsubsection{"user space emulation"}
+
+Parmi les différentes fonctionnalités que QEMU propose, on s'intéresse ici à l'émulation en espace utilisateur ("user space emulation")\footnote{\url{https://qemu.weilnetz.de/doc/qemu-doc.html\#QEMU-User-space-emulator}}
+Par cela, il devient possible d'exécuter des binaires Linux ou BSD quelconques sur n'importe quelle architecture permettant d'exécuter QEMU, en l'occurrence, une architecture x86 de nos ordinateurs personnels ou de l'environnement du CREMI.
+
+Dans ce mode, QEMU émule uniquement le CPU, sur lequel il exécute le binaire ciblant une autre architecture que celle sur laquelle QEMU tourne.
+Il ne simule pas le matériel, ni le noyau.
+Pour fonctionner, il intercepte les différents appels systèmes qui surviennent et les transmet au noyau du système hôte.
+\footnote{\url{https://ownyourbits.com/2018/06/13/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt_misc/}}
+
+\paragraph{}
+Sans établir une description complète du fonctionnement de QEMU, quelques mots sont cependant nécessaires pour comprendre par la suite la manière dont AFL effectue son instrumentation, essentielle au suivi du flot d'exécution du programme.
+
+QEMU est capable de découper un binaire en différents ``basic blocs'', chaque fin de bloc étant repérée grâce à une instruction modifiant le compteur de programme (comme par exemple les instructions \lstinline{jmp}, \lstinline{call} ou encore \lstinline{ret} du jeu d'instructions x86).
+Il utilise alors un générateur de code : le \lstinline{TCG} (Tiny Code Generator\footnote{\url{https://wiki.qemu.org/Documentation/TCG}}) pour traduire les basic blocs du programme utilisant des instructions de l'architecture cible vers des ``Translated Blocs'' utilisant des instructions de l'architecture hôte.
+
+\subsubsection{Instrumentation par AFL}
+
+AFL utilise une version patchée de QEMU permettant d'implémenter les opérations dont il a besoin.
+En particulier : arriver à suivre le flot d'exécution du programme grâce à une forme d'instrumentation, et gérer le modèle du ``fork server''\footnote{Se référer à la section \ref{fork-server}.}.
+Les différents changements apportés à QEMU sont disponibles dans le dossier \path{qemu_mode/patches/} d'AFL\footnote{Accessible en ligne : \url{https://github.com/mirrorer/afl/tree/master/qemu_mode/patches}.}.
+
+Décrite dans le whitepaper d'AFL \cite[section 12 : Binary-only instrumentation]{technical-details}, voici à quoi ressemble l'instrumentation mise en place sur les ``Translated Blocs'' générés par QEMU :
+\begin{lstlisting}
+  if (block_address > elf_text_start && block_address < elf_text_end) {
+    cur_location = (block_address >> 4) ^ (block_address << 8);
+    shared_mem[cur_location ^ prev_location]++;
+    prev_location = cur_location >> 1;
+  }
+\end{lstlisting}
+
+% TODO: je n'ai pas trop compris en quoi ça résolvait le problème (citation du whitepaper)
+% The shift-and-XOR-based scrambling in the second line is used to mask the effects of instruction alignment.
+L'opération de shift effectuée à la deuxième ligne est utilisée pour masquer les effets de l'alignement des instructions (arrivant en pratique lorsqu'une instruction est la cible d'un branchement, pour optimiser son chargement par le CPU).
+Ce sera donc le cas au début de chacun des basic blocs.
+
+\paragraph{}
+La première traduction d'un basic bloc est toujours la plus lente.
+Chaque traduction est placée dans un cache, permettant à QEMU de retrouver rapidement des ``Translated Blocs'' s'ils ont déjà été générés au cours de l'exécution.
+À travers le mode QEMU, AFL utilise un ``fork server'' différent de celui présenté dans la section \ref{fork-server} : ici, est créé un canal de communication entre l'émulateur et le processus parent, permettant de générer un cache de traduction partagé avec les différents processus fils.
+Ainsi, lorsqu'un nouveau bloc est atteint, le parent est averti, puis le cache est mis à jour, et chaque fils peut alors bénéficier de la traduction qui vient d'être effectuée.
+Ainsi, le mode QEMU exécute seulement deux à cinq fois plus d'instructions que l'utilisation normale d'AFL.

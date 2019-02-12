@@ -101,7 +101,8 @@ L'analyse de ces différents problèmes sont présentés dans la section suivant
 \subsection{radare2 (interpréteur) - read out of bounds}
 
 Nous avons tout d'abord identifié un problème de type ``read out-of-bounds'' sur un buffer situé dans le heap.
-Le bug se situe dans l'exécution de la commande \lstinline{dbw} dans l'interpréteur Radare2. Voici un extrait du log de ASAN lorsque l'on exécute cette commande dans Radare2 :
+Le bug se situe dans l'exécution de la commande \lstinline{dbw} dans l'interpréteur Radare2.
+Voici un extrait du log de ASAN lorsque l'on exécute cette commande dans Radare2 :
 
 \begin{lstlisting}
   ==30389==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x60200006c694 at pc 0x7f6213972144 bp 0x7ffed25f8010 sp 0x7ffed25f8008
@@ -138,7 +139,9 @@ Le problème se situe dans la fonction \lstinline{r_core_cmd_bp} qui s'occupe de
   ...
 \end{lstlisting}
 
-On voit ici que le troisième caractère est comparé à travers un switch-case et que si la commande est ``dbw'', le pointeur \lstinline{input} est incrémenté : il pointe maintenant sur la chaîne ``w''. Le problème, c'est qu'il n'y a pas de \lstinline{break} à la fin de ce \lstinline{case}, ce qui fait que le deuxième \lstinline{case} est également exécuté. On voit alors que la fonction \lstinline{r_str_trim_ro} est appliqué sur un buffer situé un caractère en dehors de la chaîne.
+On voit ici que le troisième caractère est comparé à travers un switch-case et que si la commande est ``dbw'', le pointeur \lstinline{input} est incrémenté : il pointe maintenant sur la chaîne ``w''.
+Le problème, c'est qu'il n'y a pas de \lstinline{break} à la fin de ce \lstinline{case}, ce qui fait que le deuxième \lstinline{case} est également exécuté.
+On voit alors que la fonction \lstinline{r_str_trim_ro} est appliqué sur un buffer situé un caractère en dehors de la chaîne.
 
 \subsection{radare2 (interpréteur) - double free}
 
@@ -229,7 +232,8 @@ case 'f': // "pif"
   } else if (input[2] == 'c') { // "pifc"
 \end{lstlisting}
 
-Ici, \lstinline{input[3]} est de type \lstinline{char} alors que le format ``\%s" attend un type \lstinline{char*}. Le caractère sera alors considéré comme l'adresse à afficher.
+Ici, \lstinline{input[3]} est de type \lstinline{char} alors que le format ``\%s" attend un type \lstinline{char*}.
+Le caractère sera alors considéré comme l'adresse à afficher.
 En effet, ici cette chaîne de caractère est directement passée à \lstinline{vsnprintf} comme l'on peut le constater si l'on regarde la fonction \lstinline{r_core_cmdf} :
 
 \begin{lstlisting}[language=C]
@@ -303,7 +307,6 @@ static void _free_resources(r_pe_resource *rs) {
 \end{lstlisting}
 
 On déclenche alors un ``double free'' comme le montre le message de ASan suivant :
-
 
 \begin{lstlisting}
   ==19003==ERROR: AddressSanitizer: attempting double-free on 0x631000028800 in thread T0:
@@ -387,10 +390,11 @@ static int cin_get(RNum *num, RNumCalc *nc, char *c) {
 
 Ici, le buffer \lstinline{nc->calc_buf} pointe vers une adresse qui a été libérée dans notre fonction \lstinline{r_num_tailff} : nous déclenchons un ``use-after-free'' en lecture.
 
-
+\paragraph{}
 L'ensemble de ces problèmes ont été remontés à l'équipe de Radare2 et corrigés.
 Le tableau ci-dessous résume l'ensemble des bugs trouvés et analysés lors de ce projet avec un lien vers l'issue et le commit corrigeant celui-ci.
 
+\paragraph{}
 \begin{tabularx}{\textwidth}{|r|c|X|c|c|}
     \hline
     \textbf{Outil} & \textbf{Code impacté} & \textbf{Classe de bug} & \textbf{Issue} & \textbf{Commit} \\

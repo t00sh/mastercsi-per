@@ -100,7 +100,8 @@ L'analyse de ces différents problèmes sont présentés dans la section suivant
 
 \subsection{radare2 (interpréteur) - read out of bounds}
 
-Nous avons tout d'abords identifié un problème de type ``read out-of-bounds'' sur un buffer situé dans le heap. Le bug se situe dans l'exécution de la commande \lstinline{dbw} dans l'interpréteur Radare2. Voici un extrait du log de ASAN lorsque l'on exécute cette commande dans Radare2 :
+Nous avons tout d'abord identifié un problème de type ``read out-of-bounds'' sur un buffer situé dans le heap.
+Le bug se situe dans l'exécution de la commande \lstinline{dbw} dans l'interpréteur Radare2. Voici un extrait du log de ASAN lorsque l'on exécute cette commande dans Radare2 :
 
 \begin{lstlisting}
   ==30389==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x60200006c694 at pc 0x7f6213972144 bp 0x7ffed25f8010 sp 0x7ffed25f8008
@@ -141,7 +142,8 @@ On voit ici que le troisième caractère est comparé à travers un switch-case 
 
 \subsection{radare2 (interpréteur) - double free}
 
-Un double free est également présent dans cette même fonction (\lstinline{r_core_cmd_bp}). Le bug se situe dans le morceau de code suivant :
+Un ``double free'' est également présent dans cette même fonction (\lstinline{r_core_cmd_bp}).
+Le bug se situe dans le morceau de code suivant :
 
 \begin{lstlisting}[language=C]
 case ' ': ;// "db"
@@ -185,9 +187,12 @@ case 'i':
 
 \end{lstlisting}
 
-Ici, on parcourt les arguments situés après la commande \lstinline{dbw}. Si le deuxième argument n'est ni ``r'', ``w'' ou ``rw'' (free 1) ou que le nombre d'arguments est impair (free 1-bis) le pointeur \lstinline{str} est free une fois et on sort de la boucle avec le \lstinline{break}. Ici le développeur voulait sans doute sortir du \lstinline{switch} également, mais un deuxième \lstinline{free} est appliqué sur ce même pointeur (free 2) : nous avons une vulnérabilité de type double free.
+Dans cette portion de code, les arguments situés après la commande \lstinline{dbw} sont parcourus.
+Si le deuxième argument n'est ni ``r'', ``w'' ou ``rw'' (free 1) ou que le nombre d'arguments est impair (free 1-bis) le pointeur \lstinline{str} est free une fois et on sort de la boucle avec le \lstinline{break}.
+Ici le développeur voulait sans doute sortir du \lstinline{switch} également, mais un deuxième \lstinline{free} est appliqué sur ce même pointeur (free 2) : nous avons une vulnérabilité de type ``double free''.
 
-On peut par exemple taper dans \lstinline{radare2} la commande \lstinline{dbw a a} ou \lstinline{dbw r r r} pour déclencher le bug. Ici, un morceau de trace généré par ASan au moment du double free :
+On peut par exemple taper dans \lstinline{radare2} la commande \lstinline{dbw a a} ou \lstinline{dbw r r r} pour déclencher le bug.
+Un morceau de la trace généré par ASan au moment du ``double free'' :
 \begin{lstlisting}
   ==31123==ERROR: AddressSanitizer: attempting double-free on 0x60200006c610 in thread T0:
   #0 0x7fcaf8889a10 in free (/usr/lib/x86_64-linux-gnu/libasan.so.3+0xc1a10)
@@ -200,7 +205,8 @@ On peut par exemple taper dans \lstinline{radare2} la commande \lstinline{dbw a 
 
 \subsection{radare2 (interpréteur) - bad pointer dereference}
 
-Nous avons également découvert une erreur de segmentation dût à une erreur de typage dans une chaîne de format. Le problème peut être constaté lorsque l'on tape \lstinline{aa} suivi de \lstinline{pifjA} dans l'outil \lstinline{radare2} :
+Nous avons également découvert une erreur de segmentation due à une erreur de type dans une chaîne de format.
+Le problème peut être constaté lorsque l'on tape \lstinline{aa} suivi de \lstinline{pifjA} dans l'outil \lstinline{radare2} :
 
 \begin{lstlisting}
   ==2181==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000041 (pc 0x7f36f2a795b2 bp 0x7ffd4cb07950 sp 0x7ffd4cb07088 T0)
@@ -296,7 +302,7 @@ static void _free_resources(r_pe_resource *rs) {
 }
 \end{lstlisting}
 
-On déclenche alors un double free comme le montre le message de ASan suivant :
+On déclenche alors un ``double free'' comme le montre le message de ASan suivant :
 
 
 \begin{lstlisting}
@@ -315,7 +321,7 @@ On déclenche alors un double free comme le montre le message de ASan suivant :
 
 \subsection{rax2 (calculatrice hexa) - use after free}
 
-Un problème de type use-after-free a été découvert dans l'outil \lstinline{rax2} grâce à ASan.
+Un problème de type ``use-after-free'' a été découvert dans l'outil \lstinline{rax2} grâce à ASan.
 AFL n'ayant à priori pas trouvé de crash lors de son exécution, nous avons en effet décidé de relancer la version de \lstinline{rax2} compilé avec ASan sur l'ensemble des entrées générées par le fuzzer.
 
 Sur une de ces entrée, nous avons obtenu le message suivant :
@@ -379,10 +385,10 @@ static int cin_get(RNum *num, RNumCalc *nc, char *c) {
 }
 \end{lstlisting}
 
-Ici, le buffer \lstinline{nc->calc_buf} pointe vers une adresse qui a été libérée dans notre fonction \lstinline{r_num_tailff} : nous déclenchons un use-after-free en lecture.
+Ici, le buffer \lstinline{nc->calc_buf} pointe vers une adresse qui a été libérée dans notre fonction \lstinline{r_num_tailff} : nous déclenchons un ``use-after-free'' en lecture.
 
 
-L'ensemble de ces problèmes ont été remontés à l'équipe de Radare2 et corrigé.
+L'ensemble de ces problèmes ont été remontés à l'équipe de Radare2 et corrigés.
 Le tableau ci-dessous résume l'ensemble des bugs trouvés et analysés lors de ce projet avec un lien vers l'issue et le commit corrigeant celui-ci.
 
 \begin{tabularx}{\textwidth}{|r|c|X|c|c|}

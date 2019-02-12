@@ -125,10 +125,10 @@ R_API const char *r_str_trim_ro(const char *str) {
 }
 \end{lstlisting}
 
-Le problème se situe dans la fonction \lstinline{r_core_cmd_bp} qui s'occupe de parser les commandes commençant par 'd' :
+Le problème se situe dans la fonction \lstinline{r_core_cmd_bp} qui s'occupe de parser les commandes commençant par 'd'\footnote{Le code est commenté par nos soins pour se focaliser sur le bug et ne pas perdre le lecteur. Cette remarque est valable pour l'ensemble du code présenté dans cette partie.} :
 
 \begin{lstlisting}[language=C]
-  ...
+  /* ... */
   case 'w': // "dbw"
       input++; // skip 'w'
       watch = true;
@@ -136,7 +136,7 @@ Le problème se situe dans la fonction \lstinline{r_core_cmd_bp} qui s'occupe de
   case ' ': ;// "db"
       #define DB_ARG(x) r_str_word_get0(str, x)
       char *str = strdup (r_str_trim_ro (input + 2));
-  ...
+  /* ... */
 \end{lstlisting}
 
 On voit ici que le troisième caractère est comparé à travers un switch-case et que si la commande est ``dbw'', le pointeur \lstinline{input} est incrémenté : il pointe maintenant sur la chaîne ``w''.

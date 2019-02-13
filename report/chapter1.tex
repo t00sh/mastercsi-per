@@ -63,7 +63,7 @@ projets complexes, et aussi d'uniformiser la répartition des couples
 (A, B) dans le tableau.
 
 Le tableau \lstinline{shared_mem[]} fait 64 kB, ce qui est un bon compromis
-(établi empiriquement) entre une taille suffisant grande pour éviter qu'il y
+(établi empiriquement) entre une taille suffisamment grande pour éviter qu'il y
 ait trop de collisions entre deux valeurs aléatoires attribuées, tout en
 étant à la fois assez petite pour rentrer dans le cache L2 du processeur 
 et ainsi permettre des calculs rapides.
@@ -145,15 +145,15 @@ La trace \#4 sera donc conservée pour la prochain round d'input d'AFL.
 Comme expliqué plus haut, chaque entrée envoyée au programme à tester
 correspond à un individu de la population de l'algorithme génétique.
 Dans de tels algorithmes, cette population garde généralement une taille
-de population plus ou moins constante au fil des itérations.
+plus ou moins constante au fil des itérations.
 
 La section \ref{nouveaux_comportements} explique comment sont choisies les
 nouvelles entrées à rajouter à la liste. Ce qu'il faut savoir, c'est que
 ces nouvelles entrées ne remplacent pas celles de l'itération précédente,
 mais les supplémentent simplement.
 
-Cela implique une potentielle redondance dans la liste des entrées : 
-Il arrive qu'une nouvelle liste d'entrées ait une couverture des points
+Cela implique une potentielle redondance dans la liste des entrées :
+il arrive qu'une nouvelle liste d'entrées ait une couverture des points
 de branchement identique à la précédente, mais avec une taille de liste
 plus grande.
 
@@ -162,10 +162,10 @@ plus petite possible pour accélérer le fuzzing, tout en gardant la même
 couverture des différents chemins d'exécutions.
 
 AFL utilise donc un petit algorithme pour réduire la taille de la liste,
-tout en gardant la même couverture. Pour cela, il associe à chaque entrée
+tout en conservant la couverture. Pour cela, il associe à chaque entrée
 un score relatif à sa taille et à son temps d'exécution associé. Il prend
 ensuite chaque couple (A, B) couvert par la liste d'entrées, choisi l'entrée
-ayant le plus petit score pour la prochain liste, et itère pour les couples
+ayant le plus petit score pour la prochaine liste, et itère pour les couples
 restants.
 
 Le corpus se retrouve ainsi réduit en taille de 5 à 10 fois par rapport au

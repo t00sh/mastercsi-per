@@ -9,6 +9,7 @@ REPORT_DEPS = $(REPORT_TEX) config.tex
 REPORT_DEPS += introduction.tex Makefile
 REPORT_DEPS += chapter1.tex
 REPORT_DEPS += chapter2.tex
+REPORT_DEPS += chapter3.tex
 
 
 all: $(REPORT_PDF)

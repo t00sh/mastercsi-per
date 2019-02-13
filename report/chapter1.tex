@@ -161,32 +161,32 @@ Cette implémentation soulève quelques questions.
 
 \paragraph{Quel code exécute l'appel à \lstinline{fork()} ? Où se passe cet appel ?}
 
-L'essentiel se passe au cours de l'exécution du programme cible, par du code injecté lors de l'instrumentation, par afl-gcc.
+L'essentiel se passe au cours de l'exécution du programme cible, par du code injecté lors de l'instrumentation, par \lstinline{afl-gcc}.
 % TODO: référence à une section précédente, où est détaillée le fonctionnement de AFL
 Comme l'intérêt est d'avoir chaque processus fils s'exécutant sur une entrée, il est nécessaire de mettre en pause le père avant que cette dernière soit traitée.
 Généralement, le code sera injecté (et donc exécuté) avant le \lstinline{main()} du programme.
 
-Quand ce point est atteint lors de l'exécution du programme, le code injecté attend des commandes de la part d'afl-fuzz.
+Quand ce point est atteint lors de l'exécution du programme, le code injecté attend des commandes de la part d'\lstinline{afl-fuzz}.
 À la réception du message "go", le programme exécute alors son appel à \lstinline{fork()}.
 Alors, dans le processus fils, c'est le code originel du programme testé qui reprend la main et poursuit son exécution légitime sur l'entrée qui lui est fournie.
 
 % TODO:
 % \paragraph{Comment chaque entrée est passée par AFL au processus fils ?}
 
-\paragraph{Comment afl-fuzz détecte-t-il les crashs ?}
+\paragraph{Comment \lstinline{afl-fuzz} détecte-t-il les crashs ?}
 
-Avec cette méthode, afl-fuzz n'est plus le parent direct des processus s'exécutant sur les entrées qu'il fournit.
+Avec cette méthode, \lstinline{afl-fuzz} n'est plus le parent direct des processus s'exécutant sur les entrées qu'il fournit.
 Il ne peut donc pas utiliser \lstinline{waitpid()} directement pour surveiller les crashs potentiels.
 
-C'est le code injecté dans le programme cible lors de l'instrumentation (celui sur lequel l'exécution est "pausée" au moment du \lstinline{main()}) qui se charge d'attendre avec \lstinline{waitpid()}, et de transférer le résultat de l'exécution du fils, de celui-ci vers afl-fuzz.
+C'est le code injecté dans le programme cible lors de l'instrumentation (celui sur lequel l'exécution est "pausée" au moment du \lstinline{main()}) qui se charge d'attendre avec \lstinline{waitpid()}, et de transférer le résultat de l'exécution du fils, de celui-ci vers \lstinline{afl-fuzz}.
 
 \paragraph{Implémentation}
 
 Le code relatif à cette fonctionnalité est dispersé à travers plusieurs fichiers.
 On notera en particulier :
 \begin{itemize}
-  \item{} Gestion du "fork server" dans afl-fuzz : \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L1968-L2255};
-  \item{} Exécution du programme par afl-fuzz \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L2361-L2382};
+  \item{} Gestion du "fork server" dans \lstinline{afl-fuzz} : \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L1968-L2255};
+  \item{} Exécution du programme par \lstinline{afl-fuzz} \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L2361-L2382};
   \item{} Et dans \url{https://github.com/mirrorer/afl/blob/master/afl-as.h}, avec les fonctions \lstinline{__afl_forkserver}, \lstinline{__afl_fork_resume}, \lstinline{__afl_fork_wait_loop} et la variable \lstinline{__afl_fork_pid}, le code injecté dans le programme cible.
 \end{itemize}
 

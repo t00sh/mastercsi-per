@@ -19,13 +19,11 @@ Comme nous venons brièvement de l'annoncer, QEMU peut être utilisé avec AFL p
   \item{} Fuzzer des binaires qui ont été compilés pour s'exécuter sur des plateformes autres que x86.
 \end{itemize}
 
-\subsection{QEMU}
-
 \begin{quote}
 QEMU est un logiciel libre de machine virtuelle, pouvant émuler un processeur et, plus généralement, une architecture différente si besoin. Il permet d'exécuter un ou plusieurs systèmes d'exploitation via les hyperviseurs KVM et Xen, ou seulement des binaires, dans l'environnement d'un système d'exploitation déjà installé sur la machine.\footnote{\url{https://fr.wikipedia.org/wiki/Qemu}}
 \end{quote}
 
-\subsubsection{"user space emulation"}
+\subsection{"user space emulation"}
 
 Parmi les différentes fonctionnalités que QEMU propose, on s'intéresse ici à l'émulation en espace utilisateur ("user space emulation")\footnote{\url{https://qemu.weilnetz.de/doc/qemu-doc.html\#QEMU-User-space-emulator}}
 Par cela, il devient possible d'exécuter des binaires Linux ou BSD quelconques sur n'importe quelle architecture permettant d'exécuter QEMU, en l'occurrence, une architecture x86 de nos ordinateurs personnels ou de l'environnement du CREMI.
@@ -41,7 +39,7 @@ Sans établir une description complète du fonctionnement de QEMU, quelques mots
 QEMU est capable de découper un binaire en différents ``basic blocs'', chaque fin de bloc étant repérée grâce à une instruction modifiant le compteur de programme (par exemple les instructions \lstinline{jmp} ou encore \lstinline{ret} du jeu d'instructions x86).
 Il utilise alors un générateur de code : le \lstinline{TCG} (Tiny Code Generator\footnote{\url{https://wiki.qemu.org/Documentation/TCG}}) pour traduire les basic blocs du programme utilisant des instructions de l'architecture cible vers des ``Translated Blocs'' utilisant des instructions de l'architecture hôte.
 
-\subsubsection{Instrumentation par AFL}
+\subsection{Instrumentation par AFL}
 
 AFL utilise une version patchée de QEMU permettant d'implémenter les opérations dont il a besoin.
 En particulier : arriver à suivre le flot d'exécution du programme grâce à une forme d'instrumentation, et gérer le modèle du ``fork server''\footnote{Se référer à la section \ref{fork-server}.}.

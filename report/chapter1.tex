@@ -38,7 +38,7 @@ L'instrumentation est ajoutée à la compilation directement au niveau
 assembleur à chaque point de branchement du programme, grâce à l'outil
 \listineline{afl_as}.
 
-On peut la résumer par le pseudo code suivant:
+On peut la résumer par le pseudo code suivant :
 
 \begin{lstlisting}
   cur_location = <COMPILE_TIME_RANDOM>;
@@ -49,8 +49,8 @@ On peut la résumer par le pseudo code suivant:
 Un basic bloc d'un programme est une suite d'instruction séquentielle d'un
 programme (sans condition, ni boucle). Ainsi, si on note A un point de
 branchement dans le programme, et B le prochain point de branchement en
-partant de A, le couple (A, B) forme un basic bloc par la définition vue
-juste avant.
+partant de A, le couple (A, B) représente un basic bloc selon la définition 
+vue juste avant.
 
 En utilisant ces notations, le tableau \lstlisting{shared_mem[]} peut être vu
 comme un dictionnaire dont les clefs sont des couples (A, B) et les valeurs
@@ -63,9 +63,10 @@ projets complexes, et aussi d'uniformiser la répartition des couples
 (A, B) dans le tableau.
 
 Le tableau \lstinline{shared_mem[]} fait 64 kB, ce qui est un bon compromis
-entre une taille suffisant grande pour éviter qu'il y ait trop de collisions
-entre deux valeurs aléatoires attribuées, et à la fois assez petite pour
-rentrer dans le cache L2 du processeur et ainsi permettre des calculs rapides.
+(établi empiriquement) entre une taille suffisant grande pour éviter qu'il y
+ait trop de collisions entre deux valeurs aléatoires attribuées, tout en
+étant à la fois assez petite pour rentrer dans le cache L2 du processeur 
+et ainsi permettre des calculs rapides.
 
 L'opération de shift peut paraître étrange à première vue, mais c'est en
 fait une astuce pour pouvoir différencier le basic bloc (A, B) de

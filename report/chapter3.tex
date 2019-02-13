@@ -56,9 +56,9 @@ Décrite dans le whitepaper d'AFL \cite[section 12 : Binary-only instrumentation
   }
 \end{lstlisting}
 
-La différence avec l'instrumentation classique réalisée avec \lstinline{afl-gcc} c'est que le \lstinline{cur_location} n'est plus une valeur aléatoire, mais calculée en fonction de l'adresse du basic bloc.
-Il aurait en effet été compliqué de faire pareil sans patcher plus profondément QEMU car il aurait été nécessaire de générer une valeur unique pour chaque basic bloc.
-Or ici, le code inséré dans QEMU est appelé à chaque exécution du ``Translated Bloc'' et on aurait perdu le caractère unique de cette valeur (aussi, le cache de QEMU ne conserve pas forcément l'ensemble de ces ``Translated Bloc'' en mémoire on peut donc difficilement stocker une valeur aléatoire dans cette structure).
+La différence avec l'instrumentation classique réalisée avec \lstinline{afl-gcc} est que la \lstinline{cur_location} n'est plus une valeur aléatoire, mais calculée en fonction de l'adresse du basic bloc.
+Il serait en effet compliqué de faire pareil sans patcher plus profondément QEMU car il faudrait générer une valeur unique pour chaque basic bloc.
+Or ici, le code inséré dans QEMU est appelé à chaque exécution du ``Translated Bloc'' et on perdrait le caractère unique de cette valeur (aussi, le cache de QEMU ne conserve pas forcément l'ensemble de ces ``Translated Bloc'' en mémoire. On peut donc difficilement stocker une valeur aléatoire dans cette structure).
 
 Ainsi, pour avoir une valeur unique pour chaque basic bloc, AFL utilise l'adresse de celui-ci pour l'identifier.
 Ces adresses étant généralement alignées pour optimiser le chargement des instructions dans le CPU et pour des raisons d'architectures : elles contiennent un nombre important de bits à zéro réduisant leurs entropie.

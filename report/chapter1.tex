@@ -139,6 +139,17 @@ selon la répartition donnée plus haut.
 
 La trace \#4 sera donc conservée pour la prochain round d'input d'AFL.
 
+\section{Évolution de la liste des entrées et réduction du corpus}
+
+Comme expliqué plus haut, chaque entrée envoyée au programme à tester
+correspond à un individu de la population de l'algorithme génétique.
+Dans de tels algorithmes, cette population garde généralement une taille
+de population plus ou moins constante au fil des itérations.
+
+Il faut donc savoir quels vont être les individus qui vont être conservés,
+entre une itération de l'algorithme et la suivante.
+
+
 \section{Améliorations, optimisations}
 
 Une manière directe d'implémenter un logiciel de Fuzzing est de faire exécuter de multiples instances du programme à tester sur des entrées différentes à l'aide d'\lstinline{execve()}\footnote{\url{https://linux.die.net/man/2/execve}}.

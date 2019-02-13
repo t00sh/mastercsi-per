@@ -391,8 +391,8 @@ static int cin_get(RNum *num, RNumCalc *nc, char *c) {
 Ici, le buffer \lstinline{nc->calc_buf} pointe vers une adresse qui a été libérée dans notre fonction \lstinline{r_num_tailff} : nous déclenchons un ``use-after-free'' en lecture.
 
 \paragraph{}
-L'ensemble de ces problèmes ont été remontés à l'équipe de Radare2 et corrigés.
-Le tableau ci-dessous résume l'ensemble des bugs trouvés et analysés lors de ce projet avec un lien vers l'issue et le commit corrigeant celui-ci.
+L'ensemble de ces problèmes ont été remontés à l'équipe de Radare2 et corrigés (sauf le dernier).
+Le tableau ci-dessous résume l'ensemble des bugs trouvés et analysés lors de ce projet avec un lien vers l'issue et le commit corrigeant celui-ci\footnote{Certains bugs de ce tableau ne sont pas présentés dans ce rapport car ils ont été trouvés et signalés ultérieurement. De plus, cela aurait certainement allourdi la lecture de celui-ci.}
 
 \paragraph{}
 \begin{tabularx}{\textwidth}{|r|c|X|c|c|}
@@ -409,4 +409,15 @@ Le tableau ci-dessous résume l'ensemble des bugs trouvés et analysés lors de 
     \hline
     rax2 & calculatrice hexa & use after free & \href{https://github.com/radare/radare2/issues/13039}{\#13039} & \href{https://github.com/radare/radare2/commit/b4504f9}{b4504f9} \\
     \hline
+    radare2 & analyseur ARcompact & read out-of-bounds & \href{https://github.com/radare/radare2/issues/13070}{\#13070} & \href{https://github.com/radare/radare2/commit/5cd5ac3}{5cd5ac3} \\
+    \hline
+    radare2 & parseur Java Class & NULL pointer dereference & \href{https://github.com/radare/radare2/issues/13069}{\#13069} & \href{https://github.com/radare/radare2/commit/3c654cf}{3c654cf} \\
+    \hline
+    radare2 & parseur Java Class & read out-of-bounds & \href{https://github.com/radare/radare2/issues/13067}{\#13067} & \href{https://github.com/radare/radare2/commit/c3339b8}{c3339b8} \\
+    \hline
+    radare2 & parseur PE & stack overflow & \href{https://github.com/radare/radare2/issues/13062}{\#13062} & \href{https://github.com/radare/radare2/commit/56f5eaf}{56f5eaf} \\
+    \hline
+    radare2 & analyseur Dalvik & bad integer conversion & \href{https://github.com/radare/radare2/issues/13072}{\#13072} & / \\
+    \hline
+
 \end{tabularx}

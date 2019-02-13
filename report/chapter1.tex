@@ -36,7 +36,7 @@ binaire autour des points de branchement (conditions, boucles).
 
 L'instrumentation est ajoutée à la compilation directement au niveau
 assembleur à chaque point de branchement du programme, grâce à l'outil
-\listineline{afl_as}.
+\listineline{afl-as}.
 
 On peut la résumer par le pseudo code suivant :
 
@@ -49,7 +49,7 @@ On peut la résumer par le pseudo code suivant :
 Un basic bloc d'un programme est une suite d'instruction séquentielle d'un
 programme (sans condition, ni boucle). Ainsi, si on note A un point de
 branchement dans le programme, et B le prochain point de branchement en
-partant de A, le couple (A, B) représente un basic bloc selon la définition 
+partant de A, le couple (A, B) représente un basic bloc selon la définition
 vue juste avant.
 
 En utilisant ces notations, le tableau \lstlisting{shared_mem[]} peut être vu
@@ -65,7 +65,7 @@ projets complexes, et aussi d'uniformiser la répartition des couples
 Le tableau \lstinline{shared_mem[]} fait 64 kB, ce qui est un bon compromis
 (établi empiriquement) entre une taille suffisamment grande pour éviter qu'il y
 ait trop de collisions entre deux valeurs aléatoires attribuées, tout en
-étant à la fois assez petite pour rentrer dans le cache L2 du processeur 
+étant à la fois assez petite pour rentrer dans le cache L2 du processeur
 et ainsi permettre des calculs rapides.
 
 L'opération de shift peut paraître étrange à première vue, mais c'est en
@@ -235,4 +235,3 @@ On notera en particulier :
   \item{} Exécution du programme par \lstinline{afl-fuzz} \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L2361-L2382};
   \item{} Et dans \url{https://github.com/mirrorer/afl/blob/master/afl-as.h}, avec les fonctions \lstinline{__afl_forkserver}, \lstinline{__afl_fork_resume}, \lstinline{__afl_fork_wait_loop} et la variable \lstinline{__afl_fork_pid}, le code injecté dans le programme cible.
 \end{itemize}
-

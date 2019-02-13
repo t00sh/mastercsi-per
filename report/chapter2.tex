@@ -6,6 +6,28 @@ Il s'agit d'ailleurs d'une suite d'outils (radare2, rasm2, rax2, rafind2...) per
 
 Nous avons décidé de cibler Radare2 étant donné qu'il possède une surface d'attaque assez importante et qu'il s'agit d'un logiciel de plus en plus utilisé dans le domaine du reverse-engineering.
 
+\section{Address Sanitizer (ASan)}
+
+Avant de parler de méthodologie, il est nécessaire de présenter un outil développé par Google permettant de détecter un certain nombre de problèmes de corruptions mémoire.
+Cet outil, ASan pour ``Address Sanitizer'', est actuellement implémenté pour les compilateurs Clang, GCC et Xcode.
+Il permet lorsque l'on compile un programme en C ou C++ de rajouter de l'instrumentation au binaire qui va vérifier à l'exécution que l'on accéde pas à des zones mémoires qui ne seraient pas autorisées dans un comportement normal du logiciel.
+ASan permet ainsi de détecter les problèmes suivants :
+
+\begin{itemize}
+\item heap/stack overflows (read et write out-of-bounds) ;
+\item overfows dans des buffers situés dans .data ou .bss ;
+\item use-after-free ;
+\item double-free ;
+\item etc.
+\end{itemize}
+
+À savoir que ASan ne détecte pas tous les problèmes de corruptions comme par exemple les read sur de la mémoire non-initialisée, les overflows dans des buffers situés dans des structures, ou encore des corruptions de mémoire arbitraire comme lorsque un integer overflow a lieu pour calculer le décalage de l'accés mémoire.
+
+Pour compiler un programme avec ASan, il suffit par exemple de fournir l'option \lstinline{-fsanitize=address} à \lstinline{gcc} ou \lstinline{clang} pour que celui-ci compile en rajoutant l'instrumentation de ASan au programme.
+
+Comme vous le constaterez en lisant les sections suivantes, l'avantage de ASan est de détecter des problèmes de sécurité qui ne seraient pas visibles lors d'une utilisation normale du programme.
+Par contre, ASan n'est pratiquement pas utilisé en production étant donné que l'instrumentation rajoute une augmentation des temps d'exécution de 73\% et une utilisation de la mémoire de 340\% en moyenne \cite{asan}.
+
 \section{Méthodologie}
 
 Notre approche concernant le fuzzing de Radare2 s'est déroulé comme suit :
@@ -15,7 +37,7 @@ Notre approche concernant le fuzzing de Radare2 s'est déroulé comme suit :
 \item Récupération des sources de Radare2, et compilation de celui-ci avec \lstinline{afl-gcc} afin d'instrumenter le programme ;
 \item Compréhension de la suite d'outils de Radare2, ciblage des entrées utilisateur et écriture des jeux de tests ;
 \item Lancement de plusieurs instances d'AFL sur nos jeux de tests précédents ;
-\item Analyse des crashs obtenus et des différentes mutations avec ASAN.
+\item Analyse des crashs obtenus et des différentes mutations avec ASan.
 \end{itemize}
 
 \subsection{Installation de AFL}
@@ -24,7 +46,7 @@ Pour récupérer les sources de AFL, il suffit de se rendre sur le site de lcamt
 
 \subsection{Instrumentation de Radare2 grâce à \lstinline{afl-gcc}}
 
-Nous avons compilé deux versions de Radare2 : une version normale instrumentée avec \lstinline{afl-gcc} et une autre compilée avec ASAN afin de découvrir de nouveaux problèmes.
+Nous avons compilé deux versions de Radare2 : une version normale instrumentée avec \lstinline{afl-gcc} et une autre compilée avec ASan afin de découvrir de nouveaux problèmes.
 La première version peut se compiler de cette manière :
 
 \begin{lstlisting}
@@ -34,7 +56,7 @@ La première version peut se compiler de cette manière :
   $ CC=path-to-afl-gcc ./sys/user.sh --install-path ../radare2-install
 \end{lstlisting}
 
-Pour obtenir une version compilée avec ASAN, nous pouvons utiliser ces commandes :
+Pour obtenir une version compilée avec ASan, nous pouvons utiliser ces commandes :
 
 \begin{lstlisting}
   $ git clone https://github.com/radare/radare2.git radare2-asan
@@ -43,8 +65,8 @@ Pour obtenir une version compilée avec ASAN, nous pouvons utiliser ces commande
   $ CC=path-to-afl-gcc AFL_USE_ASAN=1 ./sys/user.sh --install-path ../radare2-install-asan
 \end{lstlisting}
 
-Il faut savoir que ASAN peut difficilement être utilisé avec AFL.
-En effet, en moyenne, l'instrumentation effectuée par ASAN multiplie par 3.4 la mémoire utilisée par le programme\cite{asan}, et qu'alors AFL limite la quantité de mémoire utilisée pendant le fuzzing d'un programme pour préserver la stabilité du système.
+Il faut savoir que ASan peut difficilement être utilisé avec AFL.
+En effet, en moyenne, l'instrumentation effectuée par ASan multiplie par 3.4 la mémoire utilisée par le programme\cite{asan}, et qu'alors AFL limite la quantité de mémoire utilisée pendant le fuzzing d'un programme pour préserver la stabilité du système.
 Pour pouvoir l'utiliser avec AFL il aurait été nécessaire de le compiler en 32bits, ce que nous n'avons pas réussi à faire sur les serveurs du CREMI.
 
 \subsection{Écriture des entrées initiales pour le fuzzing}
@@ -92,7 +114,7 @@ Ci-dessous, le résultat d'une des instances de AFL lancée sur l'outil \lstinli
 Après quelques jours de fuzzing, nous avons obtenus dix crashs sur le parsing des commandes \lstinline{radare2} et un crash sur le parsing des fichiers binaires (toujours sur l'outil \lstinline{radare2}).
 Les fichiers générant ces crashs sont stockés dans le dossier \path{out/crashes/}, les entrées s'exécutant en plus d'une seconde (temps de timeout par défaut de AFL) dans le dossier \path{out/hangs/} et l'ensemble des mutations dans le dossier \path{out/queue/}.
 
-Afin de découvrir d'autres problèmes potentiels, nous avons réexécuté notre version de Radare2 compilée avec ASAN sur l'ensemble des fichiers présents dans \path{out/queue/}.
+Afin de découvrir d'autres problèmes potentiels, nous avons réexécuté notre version de Radare2 compilée avec ASan sur l'ensemble des fichiers présents dans \path{out/queue/}.
 Cela nous a permis de découvrir notamment un problème dans l'outil \lstinline{rax2} et d'autres problèmes dans le parsing des scripts de \lstinline{radare2}.
 L'analyse de ces différents problèmes sont présentés dans la section suivante.
 
@@ -102,7 +124,7 @@ L'analyse de ces différents problèmes sont présentés dans la section suivant
 
 Nous avons tout d'abord identifié un problème de type ``read out-of-bounds'' sur un buffer situé dans le heap.
 Le bug se situe dans l'exécution de la commande \lstinline{dbw} dans l'interpréteur Radare2.
-Voici un extrait du log de ASAN lorsque l'on exécute cette commande dans Radare2 :
+Voici un extrait du log de ASan lorsque l'on exécute cette commande dans Radare2 :
 
 \begin{lstlisting}
   ==30389==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x60200006c694 at pc 0x7f6213972144 bp 0x7ffed25f8010 sp 0x7ffed25f8008

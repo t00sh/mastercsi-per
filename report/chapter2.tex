@@ -21,7 +21,7 @@ ASan permet ainsi de détecter les problèmes suivants :
 \item etc.
 \end{itemize}
 
-À savoir que ASan ne détecte pas tous les problèmes de corruption comme par exemple les lecture de mémoire non initialisée, les overflows dans des buffers situés dans des structures, ou encore des corruptions de mémoire arbitraire comme lorsque un integer overflow a lieu pour calculer le décalage de l'accès mémoire.
+À savoir que ASan ne détecte pas tous les problèmes de corruption comme par exemple les lectures de mémoire non initialisée, les overflows dans des buffers situés dans des structures, ou encore des corruptions de mémoire arbitraire comme lorsque un integer overflow a lieu pour calculer le décalage de l'accès mémoire.
 
 Pour compiler un programme avec ASan, il suffit par exemple de fournir l'option \lstinline{-fsanitize=address} à \lstinline{gcc} ou \lstinline{clang} pour que celui-ci compile en rajoutant l'instrumentation de ASan au programme.
 

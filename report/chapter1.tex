@@ -147,8 +147,29 @@ correspond à un individu de la population de l'algorithme génétique.
 Dans de tels algorithmes, cette population garde généralement une taille
 de population plus ou moins constante au fil des itérations.
 
-Il faut donc savoir quels vont être les individus qui vont être conservés,
-entre une itération de l'algorithme et la suivante.
+La section \ref{nouveaux_comportements} explique comment sont choisies les
+nouvelles entrées à rajouter à la liste. Ce qu'il faut savoir, c'est que
+ces nouvelles entrées ne remplacent pas celles de l'itération précédente,
+mais les supplémentent simplement.
+
+Cela implique une potentielle redondance dans la liste des entrées : 
+Il arrive qu'une nouvelle liste d'entrées ait une couverture des points
+de branchement identique à la précédente, mais avec une taille de liste
+plus grande.
+
+Cela n'est pas souhaitable, on préférerait avoir une liste d'entrées la
+plus petite possible pour accélérer le fuzzing, tout en gardant la même
+couverture des différents chemins d'exécutions.
+
+AFL utilise donc un petit algorithme pour réduire la taille de la liste,
+tout en gardant la même couverture. Pour cela, il associe à chaque entrée
+un score relatif à sa taille et à son temps d'exécution associé. Il prend
+ensuite chaque couple (A, B) couvert par la liste d'entrées, choisi l'entrée
+ayant le plus petit score pour la prochain liste, et itère pour les couples
+restants.
+
+Le corpus se retrouve ainsi réduit en taille de 5 à 10 fois par rapport au
+précédent.
 
 
 \section{Améliorations, optimisations}

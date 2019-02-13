@@ -15,17 +15,17 @@ ASan permet ainsi de détecter les problèmes suivants :
 
 \begin{itemize}
 \item heap/stack overflows (read et write out-of-bounds) ;
-\item overfows dans des buffers situés dans .data ou .bss ;
+\item overflows dans des buffers situés dans .data ou .bss ;
 \item use-after-free ;
 \item double-free ;
 \item etc.
 \end{itemize}
 
-À savoir que ASan ne détecte pas tous les problèmes de corruptions comme par exemple les read sur de la mémoire non-initialisée, les overflows dans des buffers situés dans des structures, ou encore des corruptions de mémoire arbitraire comme lorsque un integer overflow a lieu pour calculer le décalage de l'accés mémoire.
+À savoir que ASan ne détecte pas tous les problèmes de corruption comme par exemple les lecture de mémoire non initialisée, les overflows dans des buffers situés dans des structures, ou encore des corruptions de mémoire arbitraire comme lorsque un integer overflow a lieu pour calculer le décalage de l'accès mémoire.
 
 Pour compiler un programme avec ASan, il suffit par exemple de fournir l'option \lstinline{-fsanitize=address} à \lstinline{gcc} ou \lstinline{clang} pour que celui-ci compile en rajoutant l'instrumentation de ASan au programme.
 
-Comme vous le constaterez en lisant les sections suivantes, l'avantage de ASan est de détecter des problèmes de sécurité qui ne seraient pas visibles lors d'une utilisation normale du programme.
+Comme vous le constaterez en lisant les sections suivantes, l'avantage de ASan est de détecter des problèmes de sécurité qui seraient restés silencieux lors d'une utilisation normale du programme.
 Par contre, ASan n'est pratiquement pas utilisé en production étant donné que l'instrumentation rajoute une augmentation des temps d'exécution de 73\% et une utilisation de la mémoire de 340\% en moyenne \cite{asan}.
 
 \section{Méthodologie}

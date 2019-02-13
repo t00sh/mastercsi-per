@@ -44,7 +44,7 @@ Notre approche concernant le fuzzing de Radare2 s'est déroulé comme suit :
 
 Pour récupérer les sources de AFL, il suffit de se rendre sur le site de lcamtuf (\href{http://lcamtuf.coredump.cx/afl/releases/afl-latest.tgz}{afl-latest}) pour récupérer l'archive, et de le compiler en tapant simplement \lstinline{make} une fois décompressée.
 
-\subsection{Instrumentation de Radare2 grâce à \lstinline{afl-gcc}}
+\subsection{Instrumentation de Radare2 grâce à \emph{afl-gcc}}
 
 Nous avons compilé deux versions de Radare2 : une version normale instrumentée avec \lstinline{afl-gcc} et une autre compilée avec ASan afin de découvrir de nouveaux problèmes.
 La première version peut se compiler de cette manière :
@@ -89,7 +89,7 @@ Pour fuzzer les formats de fichiers, nous avons utilisé le dépôt \href{https:
 
 Pour les outils \lstinline{rasm2}, \lstinline{rax2} et \lstinline{radare2} (partie scripts), nous avons simplement écrit un fichier valide minimal de quelques octets pour chaque outil.
 
-\subsection{Lancement de \lstinline{afl-fuzz}}
+\subsection{Lancement de \emph{afl-fuzz}}
 
 Une fois tout ce travail effectué, nous avons lancé une instance de \lstinline{afl-fuzz} pour chaque partie du logiciel testé.
 Pour cela, nous avons utilisé les serveurs de calculs (\path{mcgonagall.emi.u-bordeaux.fr}) mis à disposition du CREMI possédant pas moins de 48 CPUS AMD64 et 128 Go de mémoire RAM.

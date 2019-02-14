@@ -13,7 +13,7 @@ et ses performances, comme le fork server.
 
 En deuxième partie, nous utilisons AFL pour fuzzer une suite d'outils :
 Radare2. L'idée est de voir en pratique comment l'installer, l'utiliser
-pour attaquer binaire, et en analyser les résultats.
+pour attaquer un programme, et en analyser les résultats.
 L'utilisation d'un logiciel supplémentaire, ASan, permet d'obtenir une
 analyse encore plus fine des résultats et même de trouver des bugs qu'AFL ne
 voit pas.
@@ -22,4 +22,3 @@ La troisième partie va un peu plus loin dans les possibilités d'AFL, et
 explique comment, même sans le code source du binaire à tester, on peut
 instrumenter ce dernier pour pouvoir le fuzzer. Pour cela, AFL utilise l'outil
 de virtualisation QEMU et en particulier son émulation en espace utilisateur.
-

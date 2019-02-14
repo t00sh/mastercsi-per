@@ -1,5 +1,8 @@
 \documentclass[a4paper]{memoir}
 
+%% Break lines in URLs
+\PassOptionsToPackage{hyphens}{url}
+
 %% Packages
 \usepackage{lmodern}
 \usepackage{palatino}
@@ -10,9 +13,8 @@
 \usepackage{listings}
 \usepackage{multirow,colortbl}
 \usepackage{xspace,varioref}
-\usepackage{hyperref}
+\usepackage[colorlinks=true,urlcolor=blue]{hyperref}
 \usepackage{graphicx}
-\usepackage{url}
 \usepackage{xcolor}
 \usepackage{realboxes}
 \usepackage{xpatch}
@@ -68,7 +70,7 @@ Parcours \emph{Cryptologie et Sécurité Informatique}.\\
 
 %% Authors
 \preauthor{\vspace{\fill}\\
-\flushleft\textbf{\large\authorname}\\
+\flushleft\textbf{\large\authorsname}\\
 \small}
 \postauthor{\vspace{1em}
 \newline\textbf{\large\supervisorname}\\\thesupervisor\\

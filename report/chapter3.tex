@@ -75,10 +75,10 @@ Ainsi, le mode QEMU est deux à cinq fois plus lent que l'utilisation normale d'
 AFL a été pensé à la base  pour l'architecture x86 et x86-64 uniquement.
 L'instrumentation ajoutée par AFL étant fortement dépendante du processeur cible (le code de \lstinline{afl-as} a de nombreuses parties écrites directement en assembleur), il est nécessaire de récrire de nombreux éléments de AFL pour en suporter un nouveau type.
 
-C'est ce qu'à fait par exemple \href{https://github.com/ele7enxxh/android-afl}{android-afl}, ciblant l'architecture ARM et en particulier le système d'exploitation mobile Android.
+C'est ce qu'à fait par exemple android-afl\footnote{\url{https://github.com/ele7enxxh/android-afl}}, ciblant l'architecture ARM et en particulier le système d'exploitation mobile Android.
 Ce projet a complétement réécrit des parties du code de \lstinline{afl-as} afin de rajouter de l'instrumentation en assembleur ARM que ça soit pour les parties instrumentant les changements de ``basic blocs'' ou la communication avec le ``fork server''.
 
-Un autre projet, \href{https://github.com/shellphish/afl-other-arch}{afl-other-arch}, utilise le mode QEMU utilisateur afin d'émuler l'architecture cible.
+Un autre projet, afl-other-arch\footnote{\url{https://github.com/shellphish/afl-other-arch}}, utilise le mode QEMU utilisateur afin d'émuler l'architecture cible.
 Cela permet de supporter alors toutes les architectures disponibles sur QEMU, qui sont très nombreuses.
 
 Comme vous pouvez le voir, QEMU peut être à la fois utilisé pour fuzzer un logiciel dont on n'a pas la source et pour émuler une architecture différente de x86 et x86-64.

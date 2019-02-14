@@ -5,7 +5,7 @@ des bugs dans un programme. Elle consiste à générer des entrées aléatoires
 ou construites intelligemment, dans le but d'essayer de faire crasher le
 programme.
 
-American fuzzy lop (AFL) est un logiciel open source de fuzzing qui utilise
+American Fuzzy Lop (AFL) est un logiciel open source de fuzzing qui utilise
 un algorithme génétique pour générer des entrées à envoyer au programme à
 fuzzer. Le fonctionnement d'un algorithme génétique consiste à utiliser
 une population qui va évoluer pour essayer de garder "les meilleurs" de la
@@ -89,7 +89,7 @@ binaire autour des points de branchement (conditions, boucles).
 
 L'instrumentation est ajoutée à la compilation directement au niveau
 assembleur à chaque point de branchement du programme, grâce à l'outil
-\listineline{afl-as}.
+\lstinline{afl-as}.
 
 On peut la résumer par le pseudo code suivant :
 
@@ -105,7 +105,7 @@ branchement dans le programme, et B le prochain point de branchement en
 partant de A, le couple (A, B) représente un basic bloc selon la définition
 vue juste avant.
 
-En utilisant ces notations, le tableau \lstlisting{shared_mem[]} peut être vu
+En utilisant ces notations, le tableau \lstinline{shared_mem[]} peut être vu
 comme un dictionnaire dont les clefs sont des couples (A, B) et les valeurs
 associées sont le nombre de fois où ce basic bloc a été pris dans
 l'exécution associée.

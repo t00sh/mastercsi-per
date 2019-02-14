@@ -6,7 +6,7 @@ Cela peut être problématique lorsque l'on souhaite fuzzer des logiciels dont l
 Pour répondre à ce problème, AFL peut s'appuyer sur le mode "user space emulation" de QEMU\footnote{\url{https://www.qemu.org/}}, qu'il utilise pour effectuer l'instrumentation du binaire "à la volée" (pendant l'exécution d'\lstinline{afl-fuzz}).
 
 De plus, nous avons toujours implicitement considéré des binaires comme étant compilés pour s'exécuter sur des architectures x86.
-Encore, le mode QEMU proposé par AFL peut nous aider à élargir notre champ d'action, en se servant de QEMU pour supporter d'autres plateformes (PowerPC, ARM, SPARC...\footnote{Pour une liste plus complète des plateformes supportées par QEMU : \url{https://qemu.weilnetz.de/doc/qemu-doc.html\#QEMU-System-emulator-for-non-PC-targets}.}).
+Encore, le mode QEMU proposé par AFL peut nous aider à élargir notre champ d'action, en se servant de QEMU pour supporter d'autres plateformes (PowerPC, ARM, SPARC...\footnote{\url{https://qemu.weilnetz.de/doc/qemu-doc.html\#QEMU-System-emulator-for-non-PC-targets}.}).
 Une autre solution possible serait d'utiliser une version d'AFL différente que celle que nous avons présenté jusqu'à présent.
 Cette alternative injecterait du code assembleur relatif à la plateforme ciblée (en lieu et place de l'assembleur x86).
 C'est par exemple la méthode employée par le projet \lstinline{android-afl}\footnote{\url{https://github.com/ele7enxxh/android-afl}}, cherchant à fuzzer des applications mobiles Android.
@@ -25,7 +25,7 @@ QEMU est un logiciel libre de machine virtuelle, pouvant émuler un processeur e
 
 \subsection{"user space emulation"}
 
-Parmi les différentes fonctionnalités que QEMU propose, on s'intéresse ici à l'émulation en espace utilisateur ("user space emulation")\footnote{\url{https://qemu.weilnetz.de/doc/qemu-doc.html\#QEMU-User-space-emulator}}
+Parmi les différentes fonctionnalités que QEMU propose, on s'intéresse ici à l'émulation en espace utilisateur ("user space emulation")\footnote{\url{https://qemu.weilnetz.de/doc/qemu-doc.html\#QEMU-User-space-emulator}} \cite{qemu}.
 Par cela, il devient possible d'exécuter des binaires Linux ou BSD quelconques sur n'importe quelle architecture permettant d'exécuter QEMU, en l'occurrence, une architecture x86 de nos ordinateurs personnels ou de l'environnement du CREMI.
 
 Dans ce mode, QEMU émule uniquement le CPU, sur lequel il exécute le binaire ciblant une autre architecture que celle sur laquelle QEMU tourne.
@@ -43,9 +43,9 @@ Il utilise alors un générateur de code : le \lstinline{TCG} (Tiny Code Generat
 
 AFL utilise une version patchée de QEMU permettant d'implémenter les opérations dont il a besoin.
 En particulier : arriver à suivre le flot d'exécution du programme grâce à une forme d'instrumentation, et gérer le modèle du ``fork server''\footnote{Se référer à la section \ref{fork-server}.}.
-Les différents changements apportés à QEMU sont disponibles dans le dossier \path{qemu_mode/patches/} d'AFL\footnote{Accessible en ligne : \url{https://github.com/mirrorer/afl/tree/master/qemu_mode/patches}.}.
+Les différents changements apportés à QEMU sont disponibles dans le dossier \path{qemu_mode/patches/} d'AFL\footnote{\url{https://github.com/mirrorer/afl/tree/master/qemu_mode/patches}}.
 
-Décrite dans le whitepaper d'AFL \cite[section 12 : Binary-only instrumentation]{technical-details}, voici à quoi ressemble l'instrumentation mise en place sur les ``Translated Blocs'' générés par QEMU :
+Décrite dans le whitepaper d'AFL \cite[section 12 : ``Binary only instrumentation'']{technical-details}, voici à quoi ressemble l'instrumentation mise en place sur les ``Translated Blocs'' générés par QEMU :
 \begin{lstlisting}[language=C]
   if (block_address > elf_text_start && block_address < elf_text_end) {
     cur_location = (block_address >> 4) ^ (block_address << 8);

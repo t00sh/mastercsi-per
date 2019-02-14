@@ -124,7 +124,7 @@ et ainsi permettre des calculs rapides.
 L'opération de shift peut paraître étrange à première vue, mais c'est en
 fait une astuce pour pouvoir différencier le basic bloc (A, B) de
 son opposé (B, A), et aussi pour différencier les boucles
-(A\textasciicircum A serait égal à B\textasciicircum B sinon).
+(A $\oplus$ A serait égal à B $\oplus$ B sinon).
 
 À la fin d'une exécution du programme, l'état du tableau
 \lstinline{shared_mem[]} représente donc quels basic blocs ont été accédés
@@ -283,7 +283,7 @@ C'est le code injecté dans le programme cible lors de l'instrumentation (celui 
 Le code relatif à cette fonctionnalité est dispersé à travers plusieurs fichiers.
 On notera en particulier :
 \begin{itemize}
-  \item{} Gestion du "fork server" dans \lstinline{afl-fuzz} : \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L1968-L2255};
-  \item{} Exécution du programme par \lstinline{afl-fuzz} \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L2361-L2382};
+  \item{} Gestion du "fork server" dans \lstinline{afl-fuzz} : \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L1968-L2255} ;
+  \item{} Exécution du programme par \lstinline{afl-fuzz} \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L2361-L2382} ;
   \item{} Et dans \url{https://github.com/mirrorer/afl/blob/master/afl-as.h}, avec les fonctions \lstinline{__afl_forkserver}, \lstinline{__afl_fork_resume}, \lstinline{__afl_fork_wait_loop} et la variable \lstinline{__afl_fork_pid}, le code injecté dans le programme cible.
 \end{itemize}

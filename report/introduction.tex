@@ -1,14 +1,14 @@
 \chapter*{Introduction}
 
 Ce projet de recherche vise à étudier des techniques de fuzzing logiciel. En
-particulier, on s'intéresse à AFL, un des programme plus utilisé et performant
-dans le domaine.
+particulier, on s'intéresse à American Fuzzy Lop (AFL), un des programmes les
+plus utilisés et performants dans le domaine.
 
 Nous présentons en première partie les principes généraux du fuzzing, ainsi que
 les rouages internes d'AFL. L'accent est mis sur le fonctionnement de son
 algorithme génétique, ainsi que l'instrumentation qu'il met en place à la
-compilation d'un binaire pour guider sa recherche. Nous expliquons également les
-méthodes astucieuses qu'il utilise pour optimiser sa vitesse d'exécution
+compilation d'un programme pour guider sa recherche. Nous expliquons également
+les méthodes astucieuses qu'il utilise pour optimiser sa vitesse d'exécution
 et ses performances, comme le fork server.
 
 En deuxième partie, nous utilisons AFL pour fuzzer une suite d'outils :
@@ -21,5 +21,5 @@ voit pas.
 La troisième partie va un peu plus loin dans les possibilités d'AFL, et
 explique comment, même sans le code source du binaire à tester, on peut
 instrumenter ce dernier pour pouvoir le fuzzer. Pour cela, AFL utilise l'outil
-de virtualisation QEMU et en particulier de son émulation en espace utilisateur.
+de virtualisation QEMU et en particulier son émulation en espace utilisateur.
 

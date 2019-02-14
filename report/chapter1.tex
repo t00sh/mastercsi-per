@@ -23,6 +23,59 @@ génétiques utilisent plusieurs techniques, par exemple ils peuvent
 "fusionner" deux individus, ou faire des mutations à partir d'un individu
 donné.
 
+\section{Algorithme génétique}\label{genetique}
+
+Avant de parler plus en détail du fonctionnement de AFL, il faut expliquer
+ce qu'est un algorithme génétique.
+
+Cette classe d'algorithme s'inspire de la théorie de l'évolution pour
+résoudre des problèmes. L'idée est donc de s'inspirer de la sélection
+naturelle, pour faire varier une population et la faire s'améliorer.
+
+Ce type d'algorithme est principalement utilisé dans des problèmes
+d'optimisation, mais pas exclusivement. Le fuzzing étant un bon exemple
+de problème sans optimisation où les algorithmes génétiques donnent de
+très bons résultats.
+
+L'idée est donc de considérer une population. Choisir quels vont être les
+individus de cette population dépend du problème à résoudre. Dans le cas du
+fuzzing, on va vouloir prendre comme individu une entrée du programme que
+l'on veut tester.
+
+Il faut ensuite un moyen de comparer les individus, pour pouvoir opérer la
+sélection et garder les meilleurs pour la prochaine génération. Dans notre
+cas, une entrée d'un programme qui génère un bug est évidemment très
+intéressante. Mais cela n'arrivera pas très fréquemment en pratique. Il faut
+donc un moyen de comparaison plus fin. L'idée va être de regarder le chemin
+d'exécution associée à une entrée. Si une entrée genère un nouveau chemin
+qui n'a jamais été exploré jusque là, alors cette entrée est intéressante.
+
+On va ensuite faire évoluer la population d'une génération à une autre avec
+une itération de l'algorithme. Il faut cependant savoir quels individus on
+garde d'une itération à l'autre, mais aussi comment générer de nouveaux
+individus qui seraient potentiellement intéressant.
+
+La façon dont sont conservés les bons individus est expliquée plus bas dans
+la section \ref{nouveaux_comportements}.
+
+Pour générer de nouveaux individus, les techniques utilisées dans les
+algorithmes génétiques sont très empiriques, souvent génériques et
+dépendent généralement du problème considéré.
+
+La génération de nouveaux individus dépend essentiellement de la façon
+dont sont codés les individus. Une des façons les plus simples et plus
+utilisées est le codage binaire, qui consiste simplement à représenter
+les individus par des nombres binaires.
+
+Avec ce codage, on pourra par exemple générer un nouvel individu C en
+fusionnant deux individus A et B, en prenant les bits de poids faible
+du premier, et les bits de poids fort du second. Ce genre de méthode
+peut sembler très empirique, et c'est justement pour cela qu'il faut
+en tester de nombreuses pour voir quelles méthodes marchent le mieux.
+
+AFL en utilise beaucoup, et change de techniques au cours de l'algorithme
+régulièrement pour explorer plus exhaustivement l'espace de recherche.
+
 \section{Instrumentation}\label{instrumentation}
 
 Toute l'exploration d'un fuzzer comme AFL consiste à  essayer de trouver le
@@ -46,7 +99,7 @@ On peut la résumer par le pseudo code suivant :
   prev_location = cur_location >> 1;
 \end{lstlisting}
 
-Un basic bloc d'un programme est une suite d'instruction séquentielle d'un
+Un basic bloc d'un programme est une suite d'instructions séquentielle d'un
 programme (sans condition, ni boucle). Ainsi, si on note A un point de
 branchement dans le programme, et B le prochain point de branchement en
 partant de A, le couple (A, B) représente un basic bloc selon la définition
@@ -163,14 +216,13 @@ couverture des différents chemins d'exécutions.
 
 AFL utilise donc un petit algorithme pour réduire la taille de la liste,
 tout en conservant la couverture. Pour cela, il associe à chaque entrée
-un score relatif à sa taille et à son temps d'exécution associé. Il prend
-ensuite chaque couple (A, B) couvert par la liste d'entrées, choisi l'entrée
-ayant le plus petit score pour la prochaine liste, et itère pour les couples
-restants.
+un score relatif à sa taille et à son temps d'exécution associé. Il boucle
+ensuite sur chaque couple (A, B) couverts par la liste d'entrées, et choisi
+l'entrée couvrant ce couple (A, B) ayant le plus petit score. Il ajoute alors
+cette entrée pour la prochaine liste, et itère pour les couples restants.
 
-Le corpus se retrouve ainsi réduit en taille de 5 à 10 fois par rapport au
-précédent.
-
+Le corpus se retrouve ainsi réduit en taille de 5 à 10 fois d'une itération
+à la suivante.
 
 \section{Améliorations, optimisations}
 

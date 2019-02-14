@@ -69,3 +69,16 @@ Chaque traduction est placée dans un cache, permettant à QEMU de retrouver rap
 À travers le mode QEMU, AFL utilise un ``fork server'' différent de celui présenté dans la section \ref{fork-server} : ici, est créé un canal de communication entre l'émulateur et le processus parent, permettant de générer un cache de traduction partagé avec les différents processus fils.
 Ainsi, lorsqu'un nouveau bloc est atteint, le parent est averti, puis le cache est mis à jour, et chaque fils peut alors bénéficier de la traduction qui vient d'être effectuée.
 Ainsi, le mode QEMU est deux à cinq fois plus lent que l'utilisation normale d'AFL.
+
+\section{AFL pour d'autres architectures}
+
+AFL a été pensé à la base  pour l'architecture x86 et x86-64 uniquement.
+L'instrumentation ajoutée par AFL étant fortement dépendante du processeur cible (le code de \lstinline{afl-as} a de nombreuses parties écrites directement en assembleur), il est nécessaire de récrire de nombreux éléments de AFL pour en suporter un nouveau type.
+
+C'est ce qu'à fait par exemple \href{https://github.com/ele7enxxh/android-afl}{android-afl}, ciblant l'architecture ARM et en particulier le système d'exploitation mobile Android.
+Ce projet a complétement réécrit des parties du code de \lstinline{afl-as} afin de rajouter de l'instrumentation en assembleur ARM que ça soit pour les parties instrumentant les changements de ``basic blocs'' ou la communication avec le ``fork server''.
+
+Un autre projet, \href{https://github.com/shellphish/afl-other-arch}{afl-other-arch}, utilise le mode QEMU utilisateur afin d'émuler l'architecture cible.
+Cela permet de supporter alors toutes les architectures disponibles sur QEMU, qui sont très nombreuses.
+
+Comme vous pouvez le voir, QEMU peut être à la fois utilisé pour fuzzer un logiciel dont on n'a pas la source et pour émuler une architecture différente de x86 et x86-64.

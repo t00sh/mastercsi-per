@@ -287,3 +287,34 @@ On notera en particulier :
   \item{} Exécution du programme par \lstinline{afl-fuzz} \url{https://github.com/mirrorer/afl/blob/master/afl-fuzz.c#L2361-L2382};
   \item{} Et dans \url{https://github.com/mirrorer/afl/blob/master/afl-as.h}, avec les fonctions \lstinline{__afl_forkserver}, \lstinline{__afl_fork_resume}, \lstinline{__afl_fork_wait_loop} et la variable \lstinline{__afl_fork_pid}, le code injecté dans le programme cible.
 \end{itemize}
+
+\subsection{Le ``persistent mode''}\label{persistent-mode}
+
+Une autre optimisation implémentée dans AFL est le ``persistent mode''.
+Celui-ci est encore expérimental et permet de bénéficier des avantages de performances du fuzzing ``in-process'' et de la robustesse du fuzzing utilisant le ``fork server''.
+
+Dans ce mode, le fuzzer AFL va alimenter les entrées d'un processus possédant une durée de vie importante.
+Ce processus va alors passer cette entrée provenant de l'algorithme génétique à l'API instrumentée, qui va elle notifier son parent une fois terminée (que ça soit de manière normale ou par un segfault/abort).
+
+Pour utiliser ce ``persistent mode'', il est nécessaire d'ajouter un peu de code autour de la partie du programme à fuzzer comme sur l'exemple ci-dessous provenant du site de lcamtuf :
+
+\begin{lstlisting}[language=C]
+int main(int argc, char** argv) {
+  while (__AFL_LOOP(1000)) {
+
+    /* Reset state. */
+    memset(buf, 0, 100);
+
+    /* Read input data. */
+    read(0, buf, 100);
+
+    /* Parse it in some vulnerable way. You'd normally call a library here. */
+    if (buf[0] != 'p') puts("error 1"); else
+    if (buf[1] != 'w') puts("error 2"); else
+    if (buf[2] != 'n') puts("error 3"); else
+      abort();
+  }
+}
+\end{lstlisting}
+
+Ce mode est particulièrement intéressant pour le fuzzing de bibliothèques où le fork peut être coûteux, notamment lors de l'initialisation de celle-ci.

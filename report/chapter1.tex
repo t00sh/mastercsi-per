@@ -291,7 +291,7 @@ On notera en particulier :
 \subsection{Le ``persistent mode''}\label{persistent-mode}
 
 Une autre optimisation implémentée dans AFL est le ``persistent mode''.
-Celui-ci est encore expérimental et permet de bénéficier des avantages de performances du fuzzing ``in-process'' et de la robustesse du fuzzing utilisant le ``fork server''.
+Celui-ci est encore expérimental et permet de bénéficier des avantages de performances du fuzzing ``in-process'' (c'est à dire que l'on ne recréer pas un processus pour chaque entrée et que l'on fuzz directement en mémoire) et de la robustesse du fuzzing utilisant le ``fork server''.
 
 Dans ce mode, le fuzzer AFL va alimenter les entrées d'un processus possédant une durée de vie importante.
 Ce processus va alors passer cette entrée provenant de l'algorithme génétique à l'API instrumentée, qui va elle notifier son parent une fois terminée (que ça soit de manière normale ou par un segfault/abort).

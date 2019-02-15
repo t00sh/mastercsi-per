@@ -6,17 +6,17 @@ application concrète sur une suite de logiciels moderne : Radare2.
 La rapidité et la facilité avec laquelle AFL expose des problèmes confirme
 l'efficacité du fuzzing comme outil pour trouver des bugs dans un programme.
 L'utilisation complémentaire d'outils comme ASan apporte des résultats
-supplémentaires et et se combine très bien avec l'utilisation d'un fuzzer.
+supplémentaires et se combine très bien avec l'utilisation d'un fuzzer.
 
 AFL n'est cependant pas le seul outil utilisé dans le cadre du fuzzing.
 Développé par Google à l'origine pour son navigateur Chrome, ClusterFuzz
 est une infrastructure de fuzzing destinée à accompagner la recherche de
 bugs en continue lors des phases de développement d'un programme.
 Lancé en 2016, OSS-Fuzz\footnote{\url{https://github.com/google/oss-fuzz}}
-est une plateforme utilisant ClusterFuzz en back-end, mise en place pour
+est une plateforme utilisant ClusterFuzz comme back end, mise en place pour
 aider les projets open source à trouver des bugs. Le code source de
 ClusterFuzz\footnote{\url{https://github.com/google/clusterfuzz}}
-a d'ailleurs été rendu open source lui-même début février 2019.
+a d'ailleurs été lui-même ouvert début février 2019.
 
 Le moteur de fuzzing libFuzzer\footnote{\url{https://llvm.org/docs/LibFuzzer.html}}
 utilise quant à lui l'infrastructure de compilation LLVM, et en particulier

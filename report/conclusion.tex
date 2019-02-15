@@ -1,0 +1,45 @@
+\chapter*{Conclusion}
+
+Notre étude explique le fonctionnement d'AFL, d'ASan, et nous présentons une
+application concrète sur une suite de logiciels modernes : Radare2.
+
+La rapidité et la facilité avec laquelle AFL expose des problèmes confirme
+l'efficacité du fuzzing comme outil pour trouver des bugs dans un programme.
+Comme nous l'avons constaté, l'utilisation de ASan apporte des résultats
+supplémentaires et se combine très bien avec l'utilisation d'un fuzzer.
+
+AFL n'est cependant pas le seul outil utilisé dans le cadre du fuzzing.
+
+Le moteur de fuzzing libFuzzer\footnote{\url{https://llvm.org/docs/LibFuzzer.html}}
+est également énormément utilisé dans ce domaine.
+Il s'agit d'une bibliothèque basée sur la chaîne de compilation LLVM, et en
+particulier utilise l'instrumentation apportée par son outil SanitizerCoverage,
+pour son exploration du code à tester.
+Ce fuzzer nécessite de créer un point d'entrée dans le programme à tester, une
+"fonction cible", à laquelle libFuzzer va alors s'attaquer pour chercher des bugs.
+On peut observer un gain de performance notable par rapport à AFL.
+
+Un autre projet développé par Google à l'origine pour son navigateur Chrome,
+a également vu le jour : ClusterFuzz.
+C'est une infrastructure de fuzzing destinée à accompagner la recherche de
+bugs en continue lors des phases de développement d'un programme.
+Lancé en 2016, OSS-Fuzz\footnote{\url{https://github.com/google/oss-fuzz}}
+est une plateforme utilisant ClusterFuzz comme back end, mise en place pour
+aider les projets open source à trouver des bugs. Le code source de
+ClusterFuzz\footnote{\url{https://github.com/google/clusterfuzz}}
+a d'ailleurs été lui-même ouvert début février 2019.
+Cette infrastructure utilise à la fois AFL et libFuzzer pour le fuzzing,
+et permet de lancer des instances sur un nombre important de CPU (le projet
+utilise en tout plus de 25000 cœurs).
+Un retour d'expérience sur le fuzzing de ImageMagick et GraphicsMagick grâce à OSS-Fuzz
+peut être consulté sur le blog de Alex Gaynor
+\footnote{\url{https://alexgaynor.net/2019/feb/05/notes-fuzzing-imagemagick-graphicsmagick/}}.
+
+Frustré par le nombre de bugs présents dans les projets open source, Hanno
+Böck a de son côté aussi souhaité aider la communauté en lançant
+le Fuzzing Project\footnote{\url{https://fuzzing-project.org}}. L'idée étant
+d'appliquer lui même une série de tests sur une partie des projets open
+source les plus utilisés et de remonter les bugs aux contributeurs concernés.
+Grâce à ce projet, Hanno Böck a déjà remonté des problèmes à de nombreux
+logiciels tels que Apache\footnote{CVE-2017-9798}, MatrixSSL\footnote{CVE-2016-6885},
+ou libarchive\footnote{CVE-2015-8934}.

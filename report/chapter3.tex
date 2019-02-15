@@ -72,7 +72,7 @@ Ainsi, le mode QEMU est deux à cinq fois plus lent que l'utilisation normale d'
 
 \section{AFL pour d'autres architectures}
 
-AFL a été pensé à la base  pour l'architecture x86 et x86-64 uniquement.
+AFL a été pensé à la base pour cibler les architectures x86 et x86-64 uniquement.
 L'instrumentation ajoutée par AFL étant fortement dépendante du processeur cible (le code de \lstinline{afl-as} a de nombreuses parties écrites directement en assembleur), il est nécessaire de réécrire de nombreux éléments de AFL pour en supporter un nouveau type.
 
 C'est ce qu'a fait par exemple android-afl\footnote{\url{https://github.com/ele7enxxh/android-afl}}, ciblant l'architecture ARM et en particulier le système d'exploitation mobile Android.

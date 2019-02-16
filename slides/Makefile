@@ -6,8 +6,12 @@ PDFLATEX ?= pdflatex -shell-escape
 SLIDES_PDF = slides.pdf
 SLIDES_TEX = slides.tex
 SLIDES_DEPS = $(SLIDES_TEX)
-SLIDES_DEPS += Makefile plan.tex
-
+SLIDES_DEPS += Makefile
+SLIDES_DEPS += introduction.tex
+SLIDES_DEPS += afl.tex
+SLIDES_DEPS += fuzzing_radare2.tex
+SLIDES_DEPS += binaires_quelconques_et_autres_plateformes.tex
+SLIDES_DEPS += conclusion.tex
 
 all: $(SLIDES_PDF)
 

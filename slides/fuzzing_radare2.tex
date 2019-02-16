@@ -1,8 +1,135 @@
 \section{Fuzzing de Radare2}
 
-\begin{frame}{Fuzzing de Radare2}{Mise en place}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Présentation de Radare2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Fuzzing de Radare2}{Pourquoi Radare2 ?}
+  \includegraphics[width=\linewidth]{../medias/radare2-github.png}
+  \begin{exampleblock}{Radare2 en quelques mots}
+    \begin{itemize}
+    \item{Outil de reverse-engineering opensource (GPLv3)}
+    \item{Supporte plus de 40 architectures (x86, ARM, MIPS, SPARC...)}
+    \item{Et une 30\textsuperscript{ène} de formats (ELF, PE, DEX...)}
+    \item{Écrit en C (bugs de corruption mémoire)}
+    \item{20000+ commits, 600+ contributeurs, 900K+ LoC}
+    \end{itemize}
+  \end{exampleblock}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Présentation de la méthodologie
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[fragile]{Fuzzing de Radare2}{Méthodologie}
+  \begin{block}{Méthodologie}
+    \begin{itemize}
+    \item{Installation de AFL}
+    \item{Instrumentation de Radare2 grâce à \lstinline{afl-gcc}}
+    \item{Établir une base d'entrées initiales pour alimenter le fuzzer}
+    \item{Analyse des résultats avec Address Sanitizer}
+    \end{itemize}
+  \end{block}
+
+  \begin{exampleblock}{Récupération des sources}
+    \begin{itemize}
+    \item{\url{http://lcamtuf.coredump.cx/afl/releases/afl-latest.tgz}}
+    \item{\url{https://github.com/radare/radare2}}
+    \end{itemize}
+  \end{exampleblock}
+
+  \vfill
+
+  \begin{exampleblock}{Instrumentation de radare2}
+    \begin{itemize}
+    \item \lstinline{CC=afl-gcc ./sys/user.sh --install-path ../radare2-install}
+    \end{itemize}
+  \end{exampleblock}
+
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Entrées de Radare2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[fragile]{Fuzzing de Radare2}{Génération des entrées}
+  \begin{center}
+    \includegraphics[width=0.25\textwidth, clip=true]{../medias/radare2-logo.png}
+    \vspace{-0.2cm}
+  \end{center}
+  \begin{columns}[T]
+    \begin{column}{0.44\linewidth}
+
+      \begin{block}{Analyseur de fichiers}
+        \begin{itemize}
+        \item{binary-samples}
+        \item{radare2-regressions}
+        \item{Selection de petits binaires}
+        \item{$\ne$ architectures/formats}
+        \end{itemize}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.44\linewidth}
+      \begin{block}{Interpréteur de commandes}
+        \begin{itemize}
+        \item{1 caractère = 1 action}
+        \item{\textbf{px} = ``Print hexdump''}
+        \item{\textbf{pxj} = ``Print hexdump in JSON''}
+        \item{Élaboration de scripts}
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vfill
+  \begin{exampleblock}{Autres outils}
+    \begin{itemize}
+    \item{rax2, rabin2, rafind2, rasm2, radiff2...}
+    \end{itemize}
+  \end{exampleblock}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% afl-fuzz en pratique
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Fuzzing de Radare2}{afl-fuzz}
+  \begin{figure}
+    \includegraphics[width=0.98\linewidth]{../medias/afl-overview.png}
+  \end{figure}
+
+  \begin{exampleblock}{afl-fuzz}
+    \begin{itemize}
+    \item{Serveurs de calculs du CREMI : 48 CPU + 128 Go de RAM}
+    \item{10 instances d'afl-fuzz}
+    \item{En tout, environ 1 semaine de fuzzing}
+    \end{itemize}
+  \end{exampleblock}
+
+\end{frame}
+
+\begin{frame}{Fuzzing de Radare2}{afl-fuzz}
+  \includegraphics[width=\linewidth]{../medias/afl-fuzz.png}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Résultats
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Fuzzing de Radare2}{Résultats}
-\end{frame}
+  \begin{exampleblock}{Address Sanitizer (ASan)}
+    \begin{itemize}
+    \item{Développé par Google}
+    \item{Instrumentation basée sur LLVM}
+    \item{Détecte certaines corruptions mémoires (overflows, UAF...)}
+    \end{itemize}
+  \end{exampleblock}
 
+  \begin{block}{Résultats}
+    \begin{itemize}
+    \item{10 bugs remontés et corrigés par Radare2}
+    \item{3 read out-of-bounds}
+    \item{2 double-free}
+    \item{2 bad-pointer-dereference}
+    \item{1 use-after-free}
+    \item{1 stack-based-overflow}
+    \item{1 integer-overflow}
+    \end{itemize}
+  \end{block}
+\end{frame}

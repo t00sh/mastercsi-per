@@ -9,7 +9,14 @@ l'efficacité du fuzzing comme outil pour trouver des bugs dans un programme.
 Comme nous l'avons constaté, l'utilisation de ASan apporte des résultats
 supplémentaires et se combine très bien avec l'utilisation d'un fuzzer.
 
-AFL n'est cependant pas le seul outil utilisé dans le cadre du fuzzing.
+Cependant, nous avons aussi vu les limites d'une telle approche.
+En effet, sans accès au code source du programme que l'on souhaite tester, l'instrumentation à la compilation est impossible.
+De plus, de nos jours, une quantité non négligeable de programmes ne ciblent plus des architectures x86, notamment les applications mobiles.
+Il est alors nécessaire de contourner ces problèmes, en utilisant le mode QEMU proposé par AFL, dont les performances sont alors dégradées comparées à celles obtenues par son fonctionnement "classique".
+Il est aussi possible d'adapter la méthode suivie par AFL pour cibler d'autres plateformes, comme par exemple ARM, en compilant sur cette architecture et injectant le code instrumenté écrit avec de l'assembleur adéquat ; mais cette technique reste marginale, et peu de projets semblent l'exploiter.
+Mentionnons aussi la problématique des programmes étant exécutés sur des systèmes Windows, pour lesquels existe une version d'AFL, originaire du Project Zero : WinAFL\footnote{\url{https://github.com/googleprojectzero/winafl}}.
+
+Plus généralement, AFL n'est pas le seul outil utilisé dans le cadre du fuzzing.
 
 Le moteur de fuzzing libFuzzer\footnote{\url{https://llvm.org/docs/LibFuzzer.html}}
 est également énormément utilisé dans ce domaine.

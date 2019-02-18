@@ -9,7 +9,8 @@ American Fuzzy Lop (AFL) est un logiciel open source de fuzzing qui utilise
 un algorithme génétique pour générer des entrées à envoyer au programme à
 fuzzer. Le fonctionnement d'un algorithme génétique consiste à utiliser
 une population qui va évoluer pour essayer de garder "les meilleurs" de la
-population et également créer de nouveaux bons candidats.
+population et également créer de nouveaux bons candidats. Son fonctionnement
+est expliqué dans la section \ref{genetique}.
 
 Typiquement ici, les individus de la population seront des entrées au
 programme à tester. Pour savoir si un individu (une entrée) est intéressant
@@ -80,13 +81,11 @@ régulièrement pour explorer plus exhaustivement l'espace de recherche.
 
 Toute l'exploration d'un fuzzer comme AFL consiste à  essayer de trouver le
 plus de chemins d'exécution différents dans le binaire.
-
 Il faut donc pour cela un moyen de différencier quels chemins ont été pris
 entre deux exécutions données.
 
 Lorsqu'un programme est compilé avec AFL, ce dernier instrumente donc le
 binaire autour des points de branchement (conditions, boucles).
-
 L'instrumentation est ajoutée à la compilation directement au niveau
 assembleur à chaque point de branchement du programme, grâce à l'outil
 \lstinline{afl-as}.
@@ -102,12 +101,12 @@ On peut la résumer par le pseudo code suivant :
 Un basic bloc d'un programme est une suite d'instructions séquentielle d'un
 programme (sans condition, ni boucle). Ainsi, si on note A un point de
 branchement dans le programme, et B le prochain point de branchement en
-partant de A, le couple (A, B) représente un basic bloc selon la définition
-vue juste avant.
+partant de A, le couple (A, B) représente la suite de basic blocs A -> B
+selon la définition vue juste avant.
 
 En utilisant ces notations, le tableau \lstinline{shared_mem[]} peut être vu
 comme un dictionnaire dont les clefs sont des couples (A, B) et les valeurs
-associées sont le nombre de fois où ce basic bloc a été pris dans
+associées sont le nombre de fois où cette suite de basic blocs a été prise dans
 l'exécution associée.
 
 L'idée derrière le fait d'associer une valeur aléatoire à la compilation
@@ -122,7 +121,7 @@ ait trop de collisions entre deux valeurs aléatoires attribuées, tout en
 et ainsi permettre des calculs rapides.
 
 L'opération de shift peut paraître étrange à première vue, mais c'est en
-fait une astuce pour pouvoir différencier le basic bloc (A, B) de
+fait une astuce pour pouvoir différencier le couple (A, B) de
 son opposé (B, A), et aussi pour différencier les boucles
 (A $\oplus$ A serait égal à B $\oplus$ B sinon).
 

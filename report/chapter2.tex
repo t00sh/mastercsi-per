@@ -1,6 +1,6 @@
 \chapter{Application : recherche de bugs dans Radare2}
 
-Afin de mettre en application le fuzzing avec AFL, nous avons ciblé le logiciel Radare2 (logiciel libre disponible sur github\footnote{\url{https://github.com/radare/radare2}} afin de découvrir de potentiels problèmes dans celui-ci.
+Afin de mettre en application le fuzzing avec AFL, nous avons ciblé le logiciel Radare2 (logiciel libre disponible sur github\footnote{\url{https://github.com/radare/radare2}}) afin de découvrir de potentiels problèmes dans celui-ci.
 Radare2 est un logiciel de reverse-engineering open-source et développé activement par une large communauté.
 Il s'agit d'ailleurs d'une suite d'outils (radare2, rasm2, rax2, rafind2...) permettant entre autre de désassembler des binaires pour un nombre important d'architectures (x86, ARM, MIPS...), d'obtenir des informations sur de nombreux formats (ELF, PE, MACHO...), etc.
 
@@ -10,7 +10,7 @@ Nous avons décidé de cibler Radare2 étant donné qu'il possède une surface d
 
 Avant de parler de méthodologie, il est nécessaire de présenter un outil développé par Google permettant de détecter un certain nombre de problèmes de corruptions mémoire.
 Cet outil, ASan pour ``Address Sanitizer'', est actuellement implémenté pour les compilateurs Clang, GCC et Xcode.
-Il permet lorsque l'on compile un programme en C ou C++ de rajouter de l'instrumentation au binaire qui va vérifier à l'exécution que l'on accéde pas à des zones mémoires qui ne seraient pas autorisées dans un comportement normal du logiciel.
+Il permet lorsque l'on compile un programme en C ou C++ de rajouter de l'instrumentation au binaire qui va vérifier à l'exécution que l'on n'accéde pas à des zones mémoires qui ne seraient pas autorisées dans un comportement normal du logiciel.
 ASan permet ainsi de détecter les problèmes suivants :
 
 \begin{itemize}
@@ -62,7 +62,7 @@ Pour obtenir une version compilée avec ASan, nous pouvons utiliser ces commande
   $ git clone https://github.com/radare/radare2.git radare2-asan
   $ mkdir radare2-install-asan
   $ cd radare2-asan
-  $ CC=path-to-afl-gcc AFL_USE_ASAN=1 ./sys/user.sh --install-path ../radare2-install-asan
+  $ ASAN=address ./sys/asan.sh -u --install-path ../radare2-install-asan
 \end{lstlisting}
 
 Il faut savoir que ASan peut difficilement être utilisé avec AFL.
@@ -147,7 +147,7 @@ R_API const char *r_str_trim_ro(const char *str) {
 }
 \end{lstlisting}
 
-Le problème se situe dans la fonction \lstinline{r_core_cmd_bp} qui s'occupe de parser les commandes commençant par 'd'\footnote{Le code est commenté par nos soins pour se focaliser sur le bug et ne pas perdre le lecteur. Cette remarque est valable pour l'ensemble du code présenté dans cette partie.} :
+Le problème se situe dans la fonction \lstinline{r_core_cmd_bp} qui s'occupe d'analyser les commandes commençant par 'd'\footnote{Le code est commenté par nos soins pour se focaliser sur le bug et ne pas perdre le lecteur. Cette remarque est valable pour l'ensemble du code présenté dans cette partie.} :
 
 \begin{lstlisting}[language=C]
   /* ... */
@@ -317,7 +317,7 @@ static void _parse_resource_directory(struct PE_(r_bin_pe_obj_t) *bin, Pe_image_
 Pour arriver à une telle erreur, il faut un PE contenant une ressource de type directory tout en passant par [1] pour allouer le \lstinline{resource_name} et par [2] pour effectuer un appel récursif avec un \lstinline{resource_name} différent de \lstinline{NULL} en [3].
 Ensuite, cette ressource de type directory doit contenir deux entrées : \lstinline{resource_name} étant différent de \lstinline{NULL}, le \lstinline{rs->name} de chaque entrée pointera alors sur la même zone mémoire [4].
 
-Lorsque l'on quitte \lstinline{radare2}, la fonction \lstinline{_free_resource} est appelée sur chacune de nos deux entrées :
+Lorsque l'on quitte \lstinline{radare2}, la fonction \lstinline{_free_resources} est appelée sur chacune de nos deux entrées :
 
 \begin{lstlisting}[language=C]
 static void _free_resources(r_pe_resource *rs) {
@@ -413,7 +413,7 @@ static int cin_get(RNum *num, RNumCalc *nc, char *c) {
 Ici, le buffer \lstinline{nc->calc_buf} pointe vers une adresse qui a été libérée dans notre fonction \lstinline{r_num_tailff} : nous déclenchons un ``use-after-free'' en lecture.
 
 \paragraph{}
-L'ensemble de ces problèmes ont été remontés à l'équipe de Radare2 et corrigés (sauf le dernier).
+L'ensemble de ces problèmes ont été remontés à l'équipe de Radare2 et corrigés.
 Le tableau ci-dessous résume l'ensemble des bugs trouvés et analysés lors de ce projet avec un lien vers l'issue et le commit corrigeant celui-ci\footnote{Certains bugs de ce tableau ne sont pas présentés dans ce rapport car ils ont été trouvés et signalés ultérieurement. De plus, cela aurait certainement allourdi la lecture de celui-ci.}
 
 \paragraph{}
@@ -433,13 +433,13 @@ Le tableau ci-dessous résume l'ensemble des bugs trouvés et analysés lors de 
     \hline
     radare2 & analyseur ARcompact & read out-of-bounds & \href{https://github.com/radare/radare2/issues/13070}{\#13070} & \href{https://github.com/radare/radare2/commit/5cd5ac3}{5cd5ac3} \\
     \hline
-    radare2 & parseur Java Class & NULL pointer dereference & \href{https://github.com/radare/radare2/issues/13069}{\#13069} & \href{https://github.com/radare/radare2/commit/3c654cf}{3c654cf} \\
+    radare2 & parser Java Class & NULL pointer dereference & \href{https://github.com/radare/radare2/issues/13069}{\#13069} & \href{https://github.com/radare/radare2/commit/3c654cf}{3c654cf} \\
     \hline
-    radare2 & parseur Java Class & read out-of-bounds & \href{https://github.com/radare/radare2/issues/13067}{\#13067} & \href{https://github.com/radare/radare2/commit/c3339b8}{c3339b8} \\
+    radare2 & parser Java Class & read out-of-bounds & \href{https://github.com/radare/radare2/issues/13067}{\#13067} & \href{https://github.com/radare/radare2/commit/c3339b8}{c3339b8} \\
     \hline
-    radare2 & parseur PE & stack overflow & \href{https://github.com/radare/radare2/issues/13062}{\#13062} & \href{https://github.com/radare/radare2/commit/56f5eaf}{56f5eaf} \\
+    radare2 & parser PE & stack overflow & \href{https://github.com/radare/radare2/issues/13062}{\#13062} & \href{https://github.com/radare/radare2/commit/56f5eaf}{56f5eaf} \\
     \hline
-    radare2 & analyseur Dalvik & bad integer conversion & \href{https://github.com/radare/radare2/issues/13072}{\#13072} & / \\
+    radare2 & analyseur Dalvik & bad integer conversion & \href{https://github.com/radare/radare2/issues/13072}{\#13072} & \href{https://github.com/radare/radare2/commit/29eba0a}{29eba0a} \\
     \hline
 
 \end{tabularx}

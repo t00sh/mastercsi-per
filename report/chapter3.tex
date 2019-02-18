@@ -60,7 +60,7 @@ Or ici, le code inséré dans QEMU est appelé à chaque exécution du ``Transla
 
 Ainsi, pour avoir une valeur unique pour chaque basic bloc, AFL utilise l'adresse de celui-ci pour l'identifier.
 Ces adresses étant généralement alignées pour optimiser le chargement des instructions dans le CPU et pour des raisons d'architectures : elles contiennent un nombre important de bits à zéro.
-Pour masquer cette alignement, AFL utilise des shifts pour identifier un basic bloc.
+Pour masquer cet alignement, AFL utilise des shifts pour identifier un basic bloc.
 
 
 \paragraph{}

@@ -1,5 +1,16 @@
 \documentclass{bredelebeamer}
 
+\usepackage{listings}
+\usepackage{realboxes}
+\usepackage{xpatch}
+
+%% lstinline style
+\definecolor{mygray}{rgb}{0.86,0.86,0.86}
+\makeatletter
+\xpretocmd\lstinline{\Colorbox{mygray}\bgroup\appto\lst@DeInit{\egroup}}{}{}
+\makeatother
+
+
 \title[]{Techniques de fuzzing}
 \subtitle{Avec American Fuzzy Lop}
 

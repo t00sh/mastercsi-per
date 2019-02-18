@@ -9,5 +9,67 @@
 \begin{frame}{AFL}{Instrumentation}
 \end{frame}
 
-\begin{frame}{AFL}{Modèle "fork server"}
+\begin{frame}{AFL}{Modèle "fork server" (1)}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{center}
+        \textbf{"classique"}
+      \end{center}
+
+      \begin{itemize}
+      \item \lstinline{execve()}
+        \begin{itemize}
+        \item copie du programme en mémoire
+        \item \lstinline{ld-linux.so} charge les librairies partagées
+        \end{itemize}
+      \item \lstinline{waitpid()}
+        \begin{itemize}
+        \item attendre que le programme termine ou crash
+        \end{itemize}
+      \item tout recommencer avec une autre entrée
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.5\textwidth}
+      \begin{center}
+        \textbf{"fork server"}
+      \end{center}
+
+      \begin{itemize}
+      \item \lstinline{execve()} "classique"
+      \item programme cible instrumenté
+        \begin{itemize}
+        \item "pause" avant le \lstinline{main} du programme
+        \item \lstinline{fork()} pour copier le processus
+        \item \lstinline{waitpid()} pour surveiller les enfants
+        \end{itemize}
+      \item communication entre alf-fuzz et programme parent avec un \lstinline{pipe}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{AFL}{Modèle "fork server" (2)}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{center}
+        \textbf{"classique"}
+      \end{center}
+
+      \bigskip
+      \begin{figure}
+        \includegraphics[width=.4\textwidth]{../medias/classique.png}
+      \end{figure}
+    \end{column}
+
+    \begin{column}{0.5\textwidth}
+      \begin{center}
+        \textbf{"fork server"}
+      \end{center}
+
+      \begin{figure}
+        \includegraphics[width=.4\textwidth]{../medias/fork-server.png}
+      \end{figure}
+    \end{column}
+  \end{columns}
 \end{frame}

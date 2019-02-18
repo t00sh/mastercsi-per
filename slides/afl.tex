@@ -11,40 +11,34 @@
 
 \begin{frame}{AFL}{Modèle "fork server" (1)}
   \begin{columns}[t]
-    \begin{column}{0.5\textwidth}
-      \begin{center}
-        \textbf{"classique"}
-      \end{center}
-
-      \begin{itemize}
-      \item \lstinline{execve()}
+    \begin{column}{0.49\textwidth}
+      \begin{block}{"classique"}
         \begin{itemize}
-        \item copie du programme en mémoire
-        \item \lstinline{ld-linux.so} charge les librairies partagées
+        \item \lstinline{execve()}
+          \begin{itemize}
+          \item copie du programme en mémoire
+          \item \lstinline{ld-linux.so} charge les librairies partagées
+          \end{itemize}
+        \item \lstinline{waitpid()}
+        \item tout recommencer avec une autre entrée
         \end{itemize}
-      \item \lstinline{waitpid()}
-        \begin{itemize}
-        \item attendre que le programme termine ou crash
-        \end{itemize}
-      \item tout recommencer avec une autre entrée
-      \end{itemize}
+        \vspace{3.5ex}
+      \end{block}
     \end{column}
 
-    \begin{column}{0.5\textwidth}
-      \begin{center}
-        \textbf{"fork server"}
-      \end{center}
-
-      \begin{itemize}
-      \item \lstinline{execve()} "classique"
-      \item programme cible instrumenté
+    \begin{column}{0.49\textwidth}
+      \begin{block}{"fork server"}
         \begin{itemize}
-        \item "pause" avant le \lstinline{main} du programme
-        \item \lstinline{fork()} pour copier le processus
-        \item \lstinline{waitpid()} pour surveiller les enfants
+        \item \lstinline{execve()} "classique"
+        \item programme cible instrumenté
+          \begin{itemize}
+          \item "pause" avant le \lstinline{main} du programme
+          \item \lstinline{fork()} pour copier le processus
+          \item \lstinline{waitpid()} pour surveiller les enfants
+          \end{itemize}
+        \item communication entre alf-fuzz et programme parent avec un \lstinline{pipe}
         \end{itemize}
-      \item communication entre alf-fuzz et programme parent avec un \lstinline{pipe}
-      \end{itemize}
+      \end{block}
     \end{column}
   \end{columns}
 \end{frame}

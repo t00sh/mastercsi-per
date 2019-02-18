@@ -230,12 +230,12 @@ Dès lors, le Fuzzer peut détecter des corruptions mémoires en utilisant \lsti
 
 Cette approche peut se révéler lente, ou tout du moins inefficace : en effet, chaque exécution du programme à tester passe un temps non négligeable à charger le programme en mémoire, linker les librairies dynamiquement ou attendre le noyau lors de l'appel à \lstinline{execve()}.
 
-AFL fonctionne différemment, et tire avantage de deux optimisations, décrites dans le Whitepaper présentant son fonctionnement (\cite[section 10 : The fork server]{technical-details}): le modèle "fork server" et le mode "persistent".
+AFL fonctionne différemment, et tire avantage de deux optimisations, décrites dans le whitepaper présentant son fonctionnement : le modèle "fork server" et le mode "persistent" \cite{technical-details}.
 
 
 \subsection{Le modèle "fork server"}\label{fork-server}
 
-Ce modèle est présenté dans l'article "Fuzzing random programs without execve()"\cite{fuzzing-binaries-without-execve} présent sur le blog d'AFL.
+Ce modèle est présenté dans l'article "Fuzzing random programs without execve()" présent sur le blog d'AFL \cite{fuzzing-binaries-without-execve}.
 
 \subsubsection{Copy-On-Write (COW)}
 
@@ -253,7 +253,6 @@ Ainsi, le système n'exécute qu'un seul appel à \lstinline{execve()} pour char
 Cependant, pour pouvoir tester le programme sur de multiples instances, AFL a besoin d'un mécanisme pour relancer le programme sur des entrées différentes.
 La solution implémentée exécute un appel à \lstinline{fork()} pour créer un processus fils, copie exacte du père contenant le programme à tester, dont l'entrée sera cependant différente.
 Cet appel à \lstinline{fork()} permet notamment de tirer avantage du COW présenté précédemment.
-
 Cette implémentation soulève quelques questions.
 
 \paragraph{Quel code exécute l'appel à \lstinline{fork()} ? Où se passe cet appel ?}
@@ -293,7 +292,7 @@ Une autre optimisation implémentée dans AFL est le ``persistent mode''.
 Celui-ci est encore expérimental et permet de bénéficier des avantages de performances du fuzzing ``in-process'' (c'est à dire que l'on ne recrée pas un processus pour chaque entrée et que l'on fuzz directement en mémoire) et de la robustesse du fuzzing utilisant le ``fork server''.
 
 Dans ce mode, le fuzzer AFL va alimenter les entrées d'un processus possédant une durée de vie importante.
-Ce processus va alors passer cette entrée provenant de l'algorithme génétique à l'API instrumentée, qui va elle notifier son parent une fois terminée (que ça soit de manière normale ou par un segfault/abort).
+Ce processus va alors passer cette entrée provenant de l'algorithme génétique à l'API instrumentée, qui va elle notifier son parent une fois terminée (que ça soit de manière normale ou par un \lstinline{SIGSEGV}/\lstinline{SIGABRT}).
 
 Pour utiliser ce ``persistent mode'', il est nécessaire d'ajouter un peu de code autour de la partie du programme à fuzzer comme sur l'exemple ci-dessous provenant du site de lcamtuf :
 

@@ -66,7 +66,7 @@ Pour obtenir une version compilée avec ASan, nous pouvons utiliser ces commande
 \end{lstlisting}
 
 Il faut savoir que ASan peut difficilement être utilisé avec AFL.
-En effet, en moyenne, l'instrumentation effectuée par ASan multiplie par 3.4 la mémoire utilisée par le programme\cite{asan}, et qu'alors AFL limite la quantité de mémoire utilisée pendant le fuzzing d'un programme pour préserver la stabilité du système.
+En effet, en moyenne, l'instrumentation effectuée par ASan multiplie par 3.4 la mémoire utilisée par le programme\cite{asan}, alors que AFL essaie de limiter la quantité de mémoire utilisée pendant le fuzzing d'un programme pour préserver la stabilité du système.
 Pour pouvoir l'utiliser avec AFL il aurait été nécessaire de le compiler en 32bits, ce que nous n'avons pas réussi à faire sur les serveurs du CREMI.
 
 \subsection{Écriture des entrées initiales pour le fuzzing}

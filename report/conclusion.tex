@@ -13,8 +13,8 @@ AFL n'est cependant pas le seul outil utilisé dans le cadre du fuzzing.
 
 Le moteur de fuzzing libFuzzer\footnote{\url{https://llvm.org/docs/LibFuzzer.html}}
 est également énormément utilisé dans ce domaine.
-Il s'agit d'une bibliothèque basée sur la chaîne de compilation LLVM, et en
-particulier utilise l'instrumentation apportée par son outil SanitizerCoverage,
+Il s'agit d'une bibliothèque basée sur la chaîne de compilation LLVM et en
+particulier utilise l'instrumentation apportée par son outil SanitizerCoverage
 pour son exploration du code à tester.
 Ce fuzzer nécessite de créer un point d'entrée dans le programme à tester, une
 "fonction cible", à laquelle libFuzzer va alors s'attaquer pour chercher des bugs.

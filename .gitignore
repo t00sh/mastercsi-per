@@ -62,6 +62,7 @@ dkms.conf
 *.nav
 *.log
 *.out
+*.vrb
 report/*.pdf
 slides/*.pdf
 

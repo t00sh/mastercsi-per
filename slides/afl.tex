@@ -10,18 +10,18 @@
   \end{quote}
   \begin{exampleblock}{Stratégies déterministes}
     \begin{itemize}
-      \item{bit flip : 1101 0010 devient 1100 0010}
-      \item{byte flip : 0xdeadbeef devient 0xde52beef}
-      \item{arithmétique simple : 0xdeadbeef devient 0xdeafbeef}
-      \item{constantes intéressantes : -1, 256, INT\_MAX, ...}
+      \item{bit flip : 1101 0010 devient 1100 0010} \pause
+      \item{byte flip : 0xdeadbeef devient 0xde52beef} \pause
+      \item{arithmétique simple : 0xdeadbeef devient 0xdeafbeef} \pause
+      \item{constantes intéressantes : -1, 256, INT\_MAX, ...} \pause
     \end{itemize}
   \end{exampleblock}
-  \begin{exampleblock}{Stratégies aléatoires}
+  \begin{exampleblock}{Stratégies aléatoires : empilement de plusieurs petites modifications}
     \begin{itemize}
-      \item{unique bit flip}
-      \item{remplacement d'un byte aléatoirement ou par un autre intéressant}
-      \item{suppression de bloc}
-      \item{duplication de bloc via suppression ou insertion}
+      \item{unique bit flip} \pause
+      \item{remplacement d'un byte aléatoirement ou par un autre intéressant} \pause
+      \item{suppression de bloc} \pause
+      \item{duplication de bloc via suppression ou insertion} \pause
       \item{memset de bloc}
     \end{itemize}
   \end{exampleblock}
@@ -34,23 +34,68 @@
 \end{frame}
 
 \begin{frame}[fragile]{AFL}{Instrumentation}
-  L'instrumentation est faite au niveau de chaque basic bloc.
+  {\Large \centerline{L'instrumentation est un bout de code rajouté par AFL au programme}}
+  \begin{itemize}
+    \item{Elle est faite au niveau de chaque basic bloc} \pause
+  \end{itemize}
+
+  \hspace{0.5cm}
+
   \begin{lstlisting}
     cur_location = <COMPILE_TIME_RANDOM>;
     shared_mem[cur_location ^ prev_location]++;
     prev_location = cur_location >> 1;
   \end{lstlisting}
+
+  \pause
+  \hspace{3.5cm}
+
   \begin{exampleblock}{Explications}
     \begin{itemize}
-      \item Une case du tableau shared\_mem correspond à une flèche du graphe précédent
-      \item{Valeur aléatoire pour simplifier l'édition de lien}
+      \item{Valeur aléatoire pour simplifier l'édition de lien} \pause
+      \item{Une case du tableau shared\_mem[] correspond à une flèche du graphe précédent} \pause
       \item{Shift pour différencier A -> B de B -> A, ainsi que A -> A de B -> B}
     \end{itemize}
   \end{exampleblock}
 \end{frame}
 
 \begin{frame}{Nouveaux comportements}
-  Expliquer comment sont choisis les entrées à garder pour le round suivant
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \begin{exampleblock}{Nouvelles transitions}
+        \begin{itemize}
+          \item{Pas de comparaison des traces}
+          \item{Comparaison des transitions}
+          \item{Nouvelle transition intéressant}
+          %\item{Shift pour différencier A -> B de B -> A, ainsi que A -> A de B -> B}
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+
+    \begin{column}{0.5\textwidth}
+      \begin{exampleblock}{Catégories}
+        \begin{itemize}
+          \item{shared\_mem[] rangé par catégories}
+          \item{1, 2, 3, 4-7, 8-15, 16-31, 32-127, 128+} 
+          \item{Changement de catégorie intéressant}
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+
+  \pause
+  \hspace{50.5cm}
+
+  {\Large \centerline{Exemples}}
+
+  \hspace{20.5cm}
+
+  \begin{itemize}
+    \item{\#1: A -> B -> B -> A -> C -> D} \pause
+    \item{\#2: A -> B -> A -> B -> A -> C} \pause
+    \item{\#3: A -> B -> C -> D} \pause
+    \item{\#4: A -> B -> A -> B}
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{AFL}{Modèle "fork server" (1)}

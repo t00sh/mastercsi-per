@@ -6,21 +6,20 @@
 
 \begin{frame}{AFL}{Mutations}
   \begin{quote}\Large
-  Designing the mutation engine for a new fuzzer has more to do with art than science
+  "Designing the mutation engine for a new fuzzer has more to do with art than science"
   \end{quote}
   \begin{exampleblock}{Stratégies déterministes}
     \begin{itemize}
-      \item{bit flip : 1101 0010 devient 1100 0010} \pause
-      \item{byte flip : 0xdeadbeef devient 0xde52beef} \pause
-      \item{arithmétique simple : 0xdeadbeef devient 0xdeafbeef} \pause
-      \item{constantes intéressantes : -1, 256, INT\_MAX, ...} \pause
+      \item{bit flip : \lstinline{1101 0010} devient \lstinline{1100 0010}} \pause
+      \item{byte flip : \lstinline{0xdeadbeef} devient \lstinline{0xde52beef}} \pause
+      \item{arithmétique simple : \lstinline{0xdeadbeef} devient \lstinline{0xdeafbeef}} \pause
+      \item{constantes intéressantes : \lstinline{-1}, \lstinline{256}, \lstinline{INT_MAX}, ...} \pause
     \end{itemize}
   \end{exampleblock}
   \begin{exampleblock}{Stratégies aléatoires : empilement de plusieurs petites modifications}
     \begin{itemize}
       \item{unique bit flip} \pause
       \item{remplacement d'un byte aléatoirement ou par un autre intéressant} \pause
-      \item{suppression de bloc} \pause
       \item{duplication de bloc via suppression ou insertion} \pause
       \item{memset de bloc}
     \end{itemize}
@@ -52,9 +51,9 @@
 
   \begin{exampleblock}{Explications}
     \begin{itemize}
-      \item{Valeur aléatoire pour simplifier l'édition de lien} \pause
-      \item{Une case du tableau shared\_mem[] correspond à une flèche du graphe précédent} \pause
-      \item{Shift pour différencier A -> B de B -> A, ainsi que A -> A de B -> B}
+      \item{valeur aléatoire pour simplifier l'édition de lien} \pause
+      \item{une case du tableau \lstinline{shared_mem[]} correspond à une flèche du graphe précédent} \pause
+      \item{shift pour différencier A $\rightarrow$ B de B $\rightarrow$ A, ainsi que A $\rightarrow$ A de B $\rightarrow$ B}
     \end{itemize}
   \end{exampleblock}
 \end{frame}
@@ -64,20 +63,20 @@
     \begin{column}{0.5\textwidth}
       \begin{exampleblock}{Nouvelles transitions}
         \begin{itemize}
-          \item{Pas de comparaison des traces}
-          \item{Comparaison des transitions}
-          \item{Nouvelle transition intéressant}
-          %\item{Shift pour différencier A -> B de B -> A, ainsi que A -> A de B -> B}
+          \item{pas de comparaison des traces}
+          \item{comparaison des transitions}
+          \item{nouvelle transition intéressante}
         \end{itemize}
+        \vspace{1.25ex}
       \end{exampleblock}
     \end{column}
 
     \begin{column}{0.5\textwidth}
       \begin{exampleblock}{Catégories}
         \begin{itemize}
-          \item{shared\_mem[] rangé par catégories}
-          \item{1, 2, 3, 4-7, 8-15, 16-31, 32-127, 128+} 
-          \item{Changement de catégorie intéressant}
+          \item{\lstinline{shared_mem[]} rangé par catégories}
+          \item{1, 2, 3, 4-7, 8-15, 16-31, 32-127, 128+}
+          \item{changement de catégorie intéressant}
         \end{itemize}
       \end{exampleblock}
     \end{column}
@@ -91,10 +90,10 @@
   \hspace{20.5cm}
 
   \begin{itemize}
-    \item{\#1: A -> B -> B -> A -> C -> D} \pause
-    \item{\#2: A -> B -> A -> B -> A -> C} \pause
-    \item{\#3: A -> B -> C -> D} \pause
-    \item{\#4: A -> B -> A -> B}
+    \item{\#1: A $\rightarrow$ B $\rightarrow$ B $\rightarrow$ A $\rightarrow$ C $\rightarrow$ D} \pause
+    \item{\#2: A $\rightarrow$ B $\rightarrow$ A $\rightarrow$ B $\rightarrow$ A $\rightarrow$ C} \pause
+    \item{\#3: A $\rightarrow$ B $\rightarrow$ C $\rightarrow$ D} \pause
+    \item{\#4: A $\rightarrow$ B $\rightarrow$ A $\rightarrow$ B}
   \end{itemize}
 \end{frame}
 

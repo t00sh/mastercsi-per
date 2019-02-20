@@ -7,10 +7,10 @@
   \includegraphics[width=\linewidth]{../medias/radare2-github.png}
   \begin{exampleblock}{Radare2 en quelques mots}
     \begin{itemize}
-    \item{Outil de reverse-engineering opensource (GPLv3)}
-    \item{Supporte plus de 40 architectures (x86, ARM, MIPS, SPARC...)}
-    \item{Et une trentaine de formats (ELF, PE, DEX...)}
-    \item{Écrit en C (bugs de corruption mémoire)}
+    \item{outil de reverse-engineering opensource (GPLv3)}
+    \item{40+ architectures (x86, ARM, MIPS, SPARC...)}
+    \item{30+ formats (ELF, PE, DEX...)}
+    \item{écrit en C (bugs de corruption mémoire)}
     \item{20000+ commits, 600+ contributeurs, 900K+ LoC}
     \end{itemize}
   \end{exampleblock}
@@ -22,10 +22,10 @@
 \begin{frame}[fragile]{Fuzzing de Radare2}{Méthodologie}
   \begin{block}{Méthodologie}
     \begin{itemize}
-    \item{Installation de AFL}
-    \item{Instrumentation de Radare2 grâce à \lstinline{afl-gcc}}
-    \item{Établir une base d'entrées initiales pour alimenter le fuzzer}
-    \item{Analyse des résultats avec Address Sanitizer}
+    \item{installation de AFL}
+    \item{instrumentation de Radare2 grâce à \lstinline{afl-gcc}}
+    \item{établir une base d'entrées initiales pour alimenter le fuzzer}
+    \item{analyse des résultats avec Address Sanitizer}
     \end{itemize}
   \end{block}
 
@@ -56,18 +56,20 @@
 \begin{frame}[fragile]{Fuzzing de Radare2}{Génération des entrées}
   \begin{center}
     \includegraphics[width=0.25\textwidth, clip=true]{../medias/radare2-logo.png}
-    \vspace{-0.2cm}
   \end{center}
+
   \begin{columns}[T]
     \begin{column}{0.44\linewidth}
 
       \begin{block}{Analyseur de fichiers}
         \begin{itemize}
-        \item{binary-samples}
-        \item{radare2-regressions}
-        \item{Selection de petits binaires}
+        \item{\path{binary-samples/}}
+        \item{\path{radare2-regressions/}}
+        \item{sélection de petits binaires}
         \item{$\ne$ architectures/formats}
         \end{itemize}
+
+        \vspace{1.75ex}
       \end{block}
     \end{column}
 
@@ -75,9 +77,9 @@
       \begin{block}{Interpréteur de commandes}
         \begin{itemize}
         \item{1 caractère = 1 action}
-        \item{\textbf{px} = ``Print hexdump''}
-        \item{\textbf{pxj} = ``Print hexdump in JSON''}
-        \item{Élaboration de scripts}
+        \item{\lstinline{px} = ``Print hexdump''}
+        \item{\lstinline{pxj} = ``Print hexdump in JSON''}
+        \item{élaboration de scripts}
         \end{itemize}
       \end{block}
     \end{column}
@@ -86,7 +88,7 @@
   \vfill
   \begin{exampleblock}{Autres outils}
     \begin{itemize}
-    \item{rax2, rabin2, rafind2, rasm2, radiff2...}
+    \item{\lstinline{rax2}, \lstinline{rabin2}, \lstinline{rafind2}, \lstinline{rasm2}, \lstinline{radiff2}, ...}
     \end{itemize}
   \end{exampleblock}
 \end{frame}
@@ -103,9 +105,9 @@
 
   \begin{exampleblock}{afl-fuzz}
     \begin{itemize}
-    \item{Serveurs de calculs du CREMI : 48 CPU + 128 Go de RAM}
-    \item{10 instances d'afl-fuzz}
-    \item{En tout, environ 1 semaine de fuzzing}
+    \item{serveurs de calculs du CREMI : 48 CPU + 128 Go de RAM}
+    \item{10 instances d'\lstinline{afl-fuzz}}
+    \item{en tout, environ 1 semaine de fuzzing}
     \end{itemize}
   \end{exampleblock}
 
@@ -121,9 +123,9 @@
 \begin{frame}{Fuzzing de Radare2}{Résultats}
   \begin{exampleblock}{Address Sanitizer (ASan)}
     \begin{itemize}
-    \item{Développé par Google}
-    \item{Instrumentation basée sur LLVM}
-    \item{Détecte certaines corruptions mémoires (overflows, UAF...)}
+    \item{développé par Google}
+    \item{instrumentation basée sur LLVM}
+    \item{détecte certaines corruptions mémoires (overflows, UAF...)}
     \end{itemize}
   \end{exampleblock}
 

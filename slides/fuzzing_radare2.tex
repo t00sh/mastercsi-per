@@ -144,3 +144,30 @@
     \end{itemize}
   \end{block}
 \end{frame}
+
+\begin{frame}[fragile]{Fuzzing de Radare2}{Exemple de bug trouvé}
+  \begin{lstlisting}[language=C]
+  case ' ': ;// "db"
+    for ( ; i < sl; i += 1 + (watch ? 1 : 0)) {
+      if (*DB_ARG(i) == '-') {
+        /* ... */
+      } else {
+        /* ... */
+        if (!strcmp (DB_ARG (i + 1), "r")) {
+          rw = R_BP_PROT_READ;
+        } else if (!strcmp (DB_ARG (i + 1), "w")) {
+          /* ... */
+        } else {
+          r_core_cmd_help (core, help_msg_dbw);
+          free (str);
+          break;
+        }
+      }
+    }
+    free (str);
+    break;
+
+  case 'i':
+    /* ... */
+  \end{lstlisting}
+\end{frame}
